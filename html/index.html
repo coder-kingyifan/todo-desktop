@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh" class="">
+<head>
+    <meta charset="UTF-8"/>
+    <title>憨憨每日TODO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {darkMode: 'class'}
+    </script>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 transition-colors
+  bg-gradient-to-br from-green-100 via-emerald-100 to-teal-100
+  dark:from-gray-900 dark:via-black dark:to-gray-900">
+
+<!-- 待办页面 -->
+<div id="todoPage" class="w-full max-w-3xl bg-white/90 dark:bg-black/70 backdrop-blur-md
+      rounded-2xl shadow-2xl p-6 flex flex-col min-h-[85vh] border border-gray-200 dark:border-gray-700">
+
+
+    <!-- 标题 -->
+    <h2 id="pageTitle"
+        class="text-center text-3xl font-extrabold mb-4
+  bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500
+  bg-clip-text text-transparent drop-shadow-lg tracking-wide">
+    </h2>
+
+
+    <!-- 日期 + 星期 + 日期选择器 -->
+    <div class="flex items-center justify-center gap-4 mb-6 relative">
+        <!-- 日期 + 星期 -->
+
+
+        <!-- 日期选择器 -->
+        <input type="date" id="datePicker"
+               class="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600
+           bg-white dark:bg-gray-800 dark:text-gray-200 shadow-sm hover:shadow-md
+           transition focus:outline-none focus:ring-2 focus:ring-green-400"/>
+        <h1 id="date"
+            class="text-2xl font-bold bg-gradient-to-r from-green-500 to-green-600
+           bg-clip-text text-transparent drop-shadow-lg whitespace-nowrap"></h1>
+        <!-- 设置按钮固定右上角 -->
+        <button onclick="openSettings()"
+                class="absolute top-0 right-0 bg-green-500 text-white rounded-lg p-2 hover:bg-green-600 shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                 stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+
+        </button>
+    </div>
+
+
+    <!-- 添加TODO -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-6">
+        <input id="newTask" type="text"
+               placeholder="请输入今日TODO（可以直接粘贴图片哦~）"
+               class="flex-1 px-4 py-3 rounded-2xl border border-gray-300
+               dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100
+               focus:outline-none focus:ring-2 focus:ring-green-400
+               shadow-sm"/>
+        <select id="priority"
+                class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600
+               dark:bg-gray-800 dark:text-gray-100 shadow-sm">
+            <option value="low">🌱 低</option>
+            <option value="medium">⚡ 中</option>
+            <option value="high">🔥 高</option>
+        </select>
+        <button onclick="addTask()"
+                class="px-6 py-2 rounded-xl font-semibold text-white
+               bg-green-500 hover:bg-green-600 shadow-md transition">
+            添加
+        </button>
+    </div>
+
+
+    <!-- 筛选 + 一键完成 -->
+    <div class="flex justify-between items-center mb-4">
+        <!-- 左边 前一天 -->
+        <button onclick="prevDay()"
+                class="text-sm text-green-600 dark:text-green-300 hover:underline">← 前一天
+        </button>
+
+        <!-- 中间 筛选 -->
+        <div class="flex gap-2">
+            <button onclick="setFilter('all')" id="filter-all"
+                    class="px-3 py-1 rounded-lg text-sm text-black dark:text-white">全部
+            </button>
+            <button onclick="setFilter('done')" id="filter-done"
+                    class="px-3 py-1 rounded-lg text-sm text-black dark:text-white">已完成
+            </button>
+            <button onclick="setFilter('undone')" id="filter-undone"
+                    class="px-3 py-1 rounded-lg text-sm text-black dark:text-white">未完成
+            </button>
+        </div>
+
+        <!-- 右边 今天按钮（可隐藏） -->
+        <span id="todayBtnWrapper">
+    <button onclick="today()"
+            class="text-sm text-green-600 dark:text-green-300 hover:underline">今天 →</button>
+  </span>
+    </div>
+
+
+    <!-- 状态 + 一键完成 -->
+    <div class="flex justify-end items-center gap-3 mb-4">
+        <div id="stats" class="text-sm text-gray-600 dark:text-gray-300"></div>
+        <button onclick="completeAllToday()"
+                class="px-3 py-1 text-sm rounded-lg bg-green-500 text-white hover:bg-green-600 transition">一键完成全部
+        </button>
+    </div>
+
+
+    <!-- 待办列表 -->
+    <ul id="taskList" class="space-y-3 flex-1 overflow-y-auto"></ul>
+
+    <!-- 作者信息 -->
+    <div class="mt-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+        作者：KingYiFan
+    </div>
+
+
+</div>
+</div>
+
+<!-- 设置页面 -->
+<div id="settingsPage" class="hidden w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
+    <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">⚙️ 设置</h2>
+
+    <div class="mb-4">
+        <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">默认优先级</label>
+        <select id="defaultPriority"
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 dark:bg-gray-700 dark:text-gray-100">
+            <option value="low">🌱 低</option>
+            <option value="medium">⚡ 中</option>
+            <option value="high">🔥 高</option>
+        </select>
+    </div>
+
+    <div class="mb-4">
+        <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">默认主题</label>
+        <select id="defaultTheme"
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 dark:bg-gray-700 dark:text-gray-100">
+            <option value="light">☀️ 浅色</option>
+            <option value="dark">🌙 深色</option>
+        </select>
+    </div>
+    <div class="mb-6 grid grid-cols-2 gap-3">
+        <!-- 导出 -->
+        <button onclick="exportData()"
+                class="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-2xl font-semibold
+                   bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow-lg
+                   hover:scale-105 hover:shadow-xl transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 4v12m0 0l-4-4m4 4l4-4M4 16h16"/>
+            </svg>
+            导出数据
+        </button>
+
+        <!-- 导入 -->
+        <input type="file" id="importFile" accept=".json"
+               class="hidden" onchange="importData(event)"/>
+        <button onclick="document.getElementById('importFile').click()"
+                class="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-2xl font-semibold
+                   bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow-lg
+                   hover:scale-105 hover:shadow-xl transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 12h16m0 0l-4-4m4 4l-4 4"/>
+            </svg>
+            导入数据
+        </button>
+    </div>
+
+    <div class="mb-6">
+        <button onclick="clearAllData()"
+                class="w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">🗑️ 删除全部数据
+        </button>
+    </div>
+
+
+    <div class="flex justify-end">
+        <button onclick="closeSettings()"
+                class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700">
+            返回待办
+        </button>
+    </div>
+</div>
+
+<!-- 图片预览 -->
+<div id="imgPreview" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <img id="previewImg" src="" class="max-h-[90vh] max-w-[90vw] rounded shadow-xl border-4 border-white"/>
+</div>
+
+<script>
+    const taskListEl = document.getElementById("taskList");
+    const newTaskEl = document.getElementById("newTask");
+    const priorityEl = document.getElementById("priority");
+    const dateEl = document.getElementById("date");
+    const weekdayEl = document.getElementById("weekday");
+    const datePicker = document.getElementById("datePicker");
+    const statsEl = document.getElementById("stats");
+    const imgPreview = document.getElementById("imgPreview");
+    const previewImg = document.getElementById("previewImg");
+
+    const todoPage = document.getElementById("todoPage");
+    const settingsPage = document.getElementById("settingsPage");
+    const defaultPriorityEl = document.getElementById("defaultPriority");
+    const defaultThemeEl = document.getElementById("defaultTheme");
+
+    let currentDate = new Date();
+    let currentFilter = "all";
+    const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+    function genId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    }
+
+    function formatDate(d) {
+        return d.toISOString().split("T")[0];
+    }
+
+    function formatDateTime(d) {
+        if (!d) return "";
+        const dt = new Date(d);
+        const todayStr = formatDate(new Date());
+        const dateStr = formatDate(dt);
+        if (dateStr === todayStr) {
+            return dt.toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"});
+        } else {
+            return `${dateStr} ${dt.toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"})}`;
+        }
+    }
+
+    // 导出数据
+    function exportData() {
+        const data = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            const raw = localStorage.getItem(key);
+            try {
+                data[key] = JSON.parse(raw); // 如果能解析，说明是 JSON
+            } catch {
+                data[key] = raw; // 如果不能解析，就直接存原始字符串
+            }
+        }
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "todo-data.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast("✅ 数据已导出");
+    }
+
+
+    // 导入数据
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const data = JSON.parse(e.target.result);
+                for (let key in data) {
+                    localStorage.setItem(key, JSON.stringify(data[key]));
+                }
+                showToast("✅ 数据已导入，正在刷新");
+                setTimeout(() => location.reload(), 1000);
+            } catch (err) {
+                alert("导入失败：文件格式错误");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+
+    // ---------------- TODO管理 ----------------
+    function loadTasks(dateStr) {
+        const d = new Date(dateStr);
+        const todayStr = formatDate(new Date());
+        const yesterdayStr = formatDate(new Date(Date.now() - 86400000)); // 昨天
+        const weekday = weekdays[d.getDay()];
+
+        // 动态标题
+        if (dateStr === todayStr) {
+            document.querySelector("h2").textContent = "憨憨今日 TODO";
+            dateEl.textContent = `${weekday}`;
+        } else if (dateStr === yesterdayStr) {
+            document.querySelector("h2").textContent = "憨憨昨日 TODO";
+            dateEl.textContent = `${weekday}`;
+        } else {
+            document.querySelector("h2").textContent = "憨憨历史 TODO";
+            dateEl.textContent = `${weekday}`;
+        }
+
+        // 控制 “今天” 按钮显示
+        const todayBtnWrapper = document.getElementById("todayBtnWrapper");
+        if (dateStr === todayStr) {
+            todayBtnWrapper.classList.add("hidden");
+        } else {
+            todayBtnWrapper.classList.remove("hidden");
+        }
+
+        // 载入任务
+        datePicker.value = dateStr;
+        let tasks = JSON.parse(localStorage.getItem(dateStr) || "[]");
+        // 如果是今天，额外合并昨天未完成的
+        if (dateStr === todayStr) {
+            let yesterdayTasks = JSON.parse(localStorage.getItem(yesterdayStr) || "[]");
+            let undoneFromYesterday = yesterdayTasks.filter(t => !t.done);
+
+            // 检查避免重复（按 id 判断）
+            let existingIds = new Set(tasks.map(t => t.id));
+            undoneFromYesterday.forEach(t => {
+                if (!existingIds.has(t.id)) {
+                    tasks.push(t);
+                }
+            });
+
+            // 存回今天的 localStorage，保证下次刷新还能看到
+            localStorage.setItem(todayStr, JSON.stringify(tasks));
+        }
+
+        // 载入任务
+        datePicker.value = dateStr;
+        renderTasks(tasks);
+    }
+
+
+    function renderTasks(tasks) {
+        taskListEl.innerHTML = "";
+        let filtered = tasks;
+        if (currentFilter === "done") filtered = tasks.filter(t => t.done);
+        if (currentFilter === "undone") filtered = tasks.filter(t => !t.done);
+
+        if (filtered.length === 0) {
+            statsEl.textContent = "今日未完成 0 / 0";
+            return;
+        }
+
+        const prioOrder = {high: 1, medium: 2, low: 3};
+        filtered.sort((a, b) => {
+            if (a.done !== b.done) return a.done ? 1 : -1;
+            if (!a.done && !b.done) return prioOrder[a.priority] - prioOrder[b.priority];
+            if (a.done && b.done) return new Date(b.completedAt) - new Date(a.completedAt);
+            return 0;
+        });
+
+        filtered.forEach(task => {
+            const li = document.createElement("li");
+            li.className = "flex flex-col bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2 shadow-sm mb-2";
+
+            const row = document.createElement("div");
+            row.className = "flex items-center";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = task.done;
+            checkbox.className = "mr-3 accent-green-500";
+            checkbox.onchange = () => toggleTask(task.id);
+            row.appendChild(checkbox);
+
+            // === 任务内容 ===
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = task.text || "";
+            input.className = "flex-1 bg-transparent border-b border-dashed border-gray-400 focus:outline-none "
+                + (task.done ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-800 dark:text-gray-100");
+
+            if (task.done) {
+                input.readOnly = true; // 禁止修改
+            } else {
+                input.onchange = () => updateTaskText(task.id, input.value);
+            }
+            row.appendChild(input);
+
+            // === 优先级 ===
+            const prioSelect = document.createElement("select");
+            prioSelect.className = "ml-2 text-xs rounded px-1 py-0.5 dark:bg-gray-700 dark:text-gray-100";
+            ["low", "medium", "high"].forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p;
+                opt.textContent = p === "high" ? "🔥 高" : p === "medium" ? "⚡ 中" : "🌱 低";
+                if (task.priority === p) opt.selected = true;
+                prioSelect.appendChild(opt);
+            });
+
+            if (task.done) {
+                prioSelect.disabled = true; // 禁止修改
+            } else {
+                prioSelect.onchange = () => updateTaskPriority(task.id, prioSelect.value);
+            }
+            row.appendChild(prioSelect);
+
+            if (!task.done) {
+                const completeBtn = document.createElement("button");
+                completeBtn.textContent = "完成";
+                completeBtn.className = "ml-2 text-xs px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600";
+                completeBtn.onclick = () => markComplete(task.id);
+                row.appendChild(completeBtn);
+            }
+
+            li.appendChild(row);
+
+            if (task.image) {
+                const img = document.createElement("img");
+                img.src = task.image;
+                img.className = "mt-2 max-h-40 rounded border cursor-pointer";
+                img.onclick = () => showImage(task.image, [task.image], 0);
+                li.appendChild(img);
+            }
+
+            const meta = document.createElement("div");
+            meta.className = "text-xs text-gray-500 dark:text-gray-400 mt-1";
+            meta.textContent = `创建: ${formatDateTime(task.createdAt)} ${task.done ? " | 完成: " + formatDateTime(task.completedAt) : ""}`;
+            li.appendChild(meta);
+
+            // ----- 备注 -----
+            const noteBox = document.createElement("div");
+            noteBox.className = "mt-2 w-full";
+
+            const noteInput = document.createElement("textarea");
+            noteInput.rows = 3;
+            noteInput.placeholder = "备注(支持粘贴多张图片哦~)";
+            noteInput.value = task.note?.text || "";
+            noteInput.className = "w-full text-sm px-3 py-2 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 resize-none";
+
+            if (task.done) {
+                noteInput.readOnly = false; // 禁止输入
+            } else {
+                noteInput.onchange = () => updateNoteText(task.id, noteInput.value);
+                noteInput.addEventListener("paste", e => {
+                    const items = e.clipboardData.items;
+                    for (let item of items) {
+                        if (item.type.startsWith("image")) {
+                            const file = item.getAsFile();
+                            const reader = new FileReader();
+                            reader.onload = evt => addNoteImage(task.id, evt.target.result);
+                            reader.readAsDataURL(file);
+                            e.preventDefault();
+                        }
+                    }
+                });
+            }
+            noteBox.appendChild(noteInput);
+
+            const noteImgBox = document.createElement("div");
+            noteImgBox.className = "flex flex-wrap gap-2 mt-2";
+            (task.note?.images || []).forEach((imgSrc, idx) => {
+                const wrapper = document.createElement("div");
+                wrapper.className = "relative";
+
+                const img = document.createElement("img");
+                img.src = imgSrc;
+                img.className = "h-16 rounded border cursor-pointer";
+                img.onclick = () => showImage(imgSrc, task.note.images, idx);
+                wrapper.appendChild(img);
+
+                if (!task.done) {
+                    const delBtn = document.createElement("button");
+                    delBtn.textContent = "✕";
+                    delBtn.className = "absolute top-0 right-0 text-xs bg-red-500 text-white rounded-full px-1";
+                    delBtn.onclick = () => removeNoteImage(task.id, idx);
+                    wrapper.appendChild(delBtn);
+                }
+
+                noteImgBox.appendChild(wrapper);
+            });
+            noteBox.appendChild(noteImgBox);
+            li.appendChild(noteBox);
+
+            taskListEl.appendChild(li);
+        });
+
+        const undoneCount = tasks.filter(t => !t.done).length;
+        statsEl.textContent = `今日未完成 ${undoneCount} / ${tasks.length}`;
+    }
+
+
+    // === 新增函数 ===
+    function updateTaskText(id, newText) {
+        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        tasks = tasks.map(t => t.id === id ? {...t, text: newText} : t);
+        saveTasks(tasks);
+    }
+
+    function updateTaskPriority(id, priority) {
+        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        tasks = tasks.map(t => t.id === id ? {...t, priority} : t);
+        saveTasks(tasks);
+        renderTasks(tasks); // 重新渲染，保证排序正常
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById("toast");
+        toast.textContent = msg;
+        toast.classList.remove("hidden");
+        // 动画：淡入
+        setTimeout(() => toast.classList.add("opacity-100"), 10);
+
+        // 2 秒后淡出
+        setTimeout(() => {
+            toast.classList.remove("opacity-100");
+            setTimeout(() => toast.classList.add("hidden"), 300);
+        }, 2000);
+    }
+
+
+    function saveTasks(tasks) {
+        localStorage.setItem(formatDate(currentDate), JSON.stringify(tasks));
+    }
+
+    function addTask(imageData = null) {
+        const text = newTaskEl.value.trim();
+        if (!text && !imageData) return;
+        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        tasks.push({
+            id: genId(),
+            text,
+            image: imageData,
+            done: false,
+            createdAt: new Date().toISOString(),
+            completedAt: null,
+            priority: priorityEl.value,
+            note: {text: "", images: []}
+        });
+        saveTasks(tasks);
+        newTaskEl.value = "";
+        renderTasks(tasks);
+        showToast("TODO已添加 ");
+    }
+
+    function toggleTask(id) {
+        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        tasks = tasks.map(t => t.id === id ? {
+            ...t,
+            done: !t.done,
+            completedAt: !t.done ? new Date().toISOString() : null
+        } : t);
+        saveTasks(tasks);
+        renderTasks(tasks);
+    }
+
+    function markComplete(id) {
+        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        tasks = tasks.map(t => t.id === id ? {
+            ...t,
+            done: true,
+            completedAt: t.completedAt || new Date().toISOString()
+        } : t);
+        saveTasks(tasks);
+        renderTasks(tasks);
+    }
+
+    // ---- 备注处理 ----
+    function updateNoteText(id, text) {
+        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        tasks = tasks.map(t => t.id === id ? {...t, note: {...(t.note || {images: []}), text}} : t);
+        saveTasks(tasks);
+    }
+
+    function addNoteImage(id, imgData) {
+        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        tasks = tasks.map(t => {
+            if (t.id === id) {
+                const images = t.note?.images || [];
+                return {...t, note: {...(t.note || {text: ""}), images: [...images, imgData]}};
+            }
+            return t;
+        });
+        saveTasks(tasks);
+        renderTasks(tasks);
+    }
+
+    function removeNoteImage(id, idx) {
+        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        tasks = tasks.map(t => {
+            if (t.id === id) {
+                const images = [...(t.note?.images || [])];
+                images.splice(idx, 1);
+                return {...t, note: {...(t.note || {text: ""}), images}};
+            }
+            return t;
+        });
+        saveTasks(tasks);
+        renderTasks(tasks);
+    }
+
+    function completeAllToday() {
+        let dateStr = formatDate(currentDate);
+        let tasks = JSON.parse(localStorage.getItem(dateStr) || "[]");
+        const now = new Date().toISOString();
+
+        let undoneTasks = tasks.filter(t => !t.done).length;
+        if (undoneTasks === 0) {
+            showToast("🎉 今天没有未完成的TODO！");
+            return;
+        }
+
+        tasks = tasks.map(t => t.done ? t : {...t, done: true, completedAt: now});
+        saveTasks(tasks);
+        renderTasks(tasks);
+
+        showToast(`一键完成，共完成 ${undoneTasks} 个TODO`);
+    }
+
+
+    // ---------------- 页面 & 设置 ----------------
+    function prevDay() {
+        currentDate.setDate(currentDate.getDate() - 1);
+        loadTasks(formatDate(currentDate));
+    }
+
+    function today() {
+        currentDate = new Date();
+        loadTasks(formatDate(currentDate));
+    }
+
+    function setFilter(f) {
+        currentFilter = f;
+        document.querySelectorAll("[id^=filter-]").forEach(btn =>
+            btn.classList.remove("bg-green-200", "dark:bg-green-700", "bg-lime-200", "dark:bg-lime-700", "bg-red-200", "dark:bg-red-700"));
+        if (f === "all") document.getElementById("filter-all").classList.add("bg-green-200", "dark:bg-green-700", "text-black", "dark:text-white");
+        if (f === "done") document.getElementById("filter-done").classList.add("bg-lime-200", "dark:bg-lime-700", "text-black", "dark:text-white");
+        if (f === "undone") document.getElementById("filter-undone").classList.add("bg-red-200", "dark:bg-red-700", "text-black", "dark:text-white");
+        renderTasks(JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]"));
+    }
+
+    function openSettings() {
+        todoPage.classList.add("hidden");
+        settingsPage.classList.remove("hidden");
+        defaultPriorityEl.value = localStorage.getItem("defaultPriority") || "medium";
+        defaultThemeEl.value = localStorage.getItem("theme") || "light";
+    }
+
+    defaultThemeEl.addEventListener("change", () => {
+        localStorage.setItem("theme", defaultThemeEl.value);
+        if (defaultThemeEl.value === "dark") {
+            document.documentElement.classList.add("dark");
+        } else {
+            document.documentElement.classList.remove("dark");
+        }
+    });
+
+    function closeSettings() {
+        localStorage.setItem("defaultPriority", defaultPriorityEl.value);
+        localStorage.setItem("theme", defaultThemeEl.value);
+
+        if (defaultThemeEl.value === "dark") document.documentElement.classList.add("dark");
+        else document.documentElement.classList.remove("dark");
+
+        // 同步优先级到主页面
+        priorityEl.value = defaultPriorityEl.value;
+
+        todoPage.classList.remove("hidden");
+        settingsPage.classList.add("hidden");
+        loadTasks(formatDate(currentDate));
+    }
+
+    function clearAllData() {
+        if (confirm("憨憨温馨提示：确定要删除所有TODO数据吗？此操作不可恢复！！！")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    // ---------------- 图片预览 ----------------
+    let previewImages = [];
+    let currentPreviewIndex = 0;
+
+    function showImage(src) {
+        const {ipcRenderer} = require("electron");
+        ipcRenderer.send("open-image-viewer", src);
+
+        ipcRenderer.once("delete-image", (_, imgSrc) => {
+            // 从本地数据里删除
+            tasks = tasks.map(t => {
+                if (t.image === imgSrc) {
+                    return {...t, image: null};
+                }
+                return t;
+            });
+            saveTasks(tasks);
+            renderTasks(tasks);
+        });
+    }
+
+
+    // 点击遮罩关闭
+    imgPreview.onclick = e => {
+        if (e.target === imgPreview) { // 只点背景时才关闭
+            imgPreview.classList.add("hidden");
+        }
+    };
+
+    // 键盘控制
+    document.addEventListener("keydown", e => {
+        if (imgPreview.classList.contains("hidden")) return;
+
+        if (e.key === "Escape") {
+            imgPreview.classList.add("hidden");
+        }
+        if (e.key === "ArrowLeft") {
+            currentPreviewIndex = (currentPreviewIndex - 1 + previewImages.length) % previewImages.length;
+            previewImg.src = previewImages[currentPreviewIndex];
+        }
+        if (e.key === "ArrowRight") {
+            currentPreviewIndex = (currentPreviewIndex + 1) % previewImages.length;
+            previewImg.src = previewImages[currentPreviewIndex];
+        }
+    });
+
+
+    imgPreview.onclick = () => imgPreview.classList.add("hidden");
+    newTaskEl.addEventListener("paste", e => {
+        const items = e.clipboardData.items;
+        for (let item of items) {
+            if (item.type.startsWith("image")) {
+                const file = item.getAsFile();
+                const reader = new FileReader();
+                reader.onload = evt => addTask(evt.target.result);
+                reader.readAsDataURL(file);
+                e.preventDefault();
+            }
+        }
+    });
+
+    // ---------------- 初始化 ----------------
+    newTaskEl.addEventListener("keydown", e => {
+        if (e.key === "Enter") addTask();
+    });
+    datePicker.addEventListener("change", function () {
+        currentDate = new Date(this.value);
+        loadTasks(formatDate(currentDate));
+    });
+    if (localStorage.getItem("theme") === "dark") document.documentElement.classList.add("dark");
+    priorityEl.value = localStorage.getItem("defaultPriority") || "medium";
+    loadTasks(formatDate(currentDate));
+    setFilter("all");
+</script>
+<!-- 中间提示框 -->
+<div id="toast"
+     class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+         bg-black/80 text-white px-6 py-3 rounded-2xl shadow-lg hidden z-50
+         text-lg font-semibold opacity-0 transition-opacity duration-300">
+</div>
+</body>
+</html>

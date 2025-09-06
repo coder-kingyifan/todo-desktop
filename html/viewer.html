@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>图片预览</title>
+    <style>
+        body {
+            margin: 0;
+            background: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        img {
+            transform-origin: center center;
+            transition: transform 0.1s ease-out;
+            cursor: zoom-out;
+            max-width: none; /* 允许放大超出窗口 */
+            max-height: none;
+        }
+    </style>
+</head>
+<body>
+<img id="preview" src="">
+<script>
+    const { ipcRenderer } = require("electron");
+    const img = document.getElementById("preview");
+
+    let scale = 1;
+
+    // 显示图片
+    ipcRenderer.on("show-image", (_, data) => {
+        img.src = data;
+        scale = 1;
+        img.style.transform = `scale(${scale})`;
+    });
+
+    // 点击关闭
+    document.body.onclick = () => {
+        ipcRenderer.send("close-viewer");
+        window.close();
+    };
+
+    // 按 Esc 关闭
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            ipcRenderer.send("close-viewer");
+            window.close();
+        }
+    });
+
+    // 滚轮缩放
+    document.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        if (e.deltaY < 0) {
+            scale = Math.min(scale + 0.1, 5); // 最大 5 倍
+        } else {
+            scale = Math.max(scale - 0.1, 0.2); // 最小 0.2 倍
+        }
+        img.style.transform = `scale(${scale})`;
+    }, { passive: false });
+</script>
+</body>
+</html>

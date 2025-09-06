@@ -1,0 +1,45 @@
+{
+  "name": "hanhan-todo",
+  "version": "1.0.0",
+  "description": "憨憨每日Todo",
+  "author": "kingyifan@88.com",
+  "main": "./js/main.js",
+  "build": {
+    "appId": "com.kingyifan.todo",
+    "productName": "憨憨每日Todo",
+    "copyright": "Copyright © 2025 KingYiFan",
+    "directories": {
+      "buildResources": "build"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/*.map",
+      "!**/test($|s)/**"
+    ],
+    "asar": true,
+    "win": {
+      "target": "nsis",
+      "icon": "./static/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "憨憨每日Todo",
+      "menuCategory": true
+    }
+  },
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "auto-launch": "^5.0.6"
+  }
+}
