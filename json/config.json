@@ -1,4 +1,5 @@
 {
   "showWindowShortcut": "Alt+1",
-  "togglePinShortcut": "Alt+2"
+  "togglePinShortcut": "Alt+2",
+  "showWindowDevTools": "Alt+0"
 }

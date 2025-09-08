@@ -284,6 +284,8 @@
 
 
     // ---------------- TODO管理 ----------------
+    // 替换整个 loadTasks 函数为以下代码：
+
     function loadTasks(dateStr) {
         const d = new Date(dateStr);
         const todayStr = formatDate(new Date());
@@ -302,7 +304,7 @@
             dateEl.textContent = `${weekday}`;
         }
 
-        // 控制 “今天” 按钮显示
+        // 控制 "今天" 按钮显示
         const todayBtnWrapper = document.getElementById("todayBtnWrapper");
         if (dateStr === todayStr) {
             todayBtnWrapper.classList.add("hidden");
@@ -313,25 +315,30 @@
         // 载入任务
         datePicker.value = dateStr;
         let tasks = JSON.parse(localStorage.getItem(dateStr) || "[]");
-        // 如果是今天，额外合并昨天未完成的
-        if (dateStr === todayStr) {
-            let yesterdayTasks = JSON.parse(localStorage.getItem(yesterdayStr) || "[]");
-            let undoneFromYesterday = yesterdayTasks.filter(t => !t.done);
+
+        // 只在展示时合并前一天未完成的任务，不保存到 localStorage
+        const viewingDate = new Date(dateStr);
+        const now = new Date();
+
+        // 对于今天及之前的日期，继承前一天未完成的任务
+        if (viewingDate <= now) {
+            // 获取前一天日期
+            const prevDay = new Date(viewingDate);
+            prevDay.setDate(prevDay.getDate() - 1);
+            const prevDayStr = formatDate(prevDay);
+
+            // 获取前一天的任务
+            let previousTasks = JSON.parse(localStorage.getItem(prevDayStr) || "[]");
+            let undoneFromPrevious = previousTasks.filter(t => !t.done);
 
             // 检查避免重复（按 id 判断）
             let existingIds = new Set(tasks.map(t => t.id));
-            undoneFromYesterday.forEach(t => {
-                if (!existingIds.has(t.id)) {
-                    tasks.push(t);
-                }
-            });
+            let newTasks = undoneFromPrevious.filter(t => !existingIds.has(t.id));
 
-            // 存回今天的 localStorage，保证下次刷新还能看到
-            localStorage.setItem(todayStr, JSON.stringify(tasks));
+            // 将前一天未完成任务添加到当前日期（仅用于展示）
+            tasks.push(...newTasks);
         }
 
-        // 载入任务
-        datePicker.value = dateStr;
         renderTasks(tasks);
     }
 
@@ -401,13 +408,23 @@
             }
             row.appendChild(prioSelect);
 
+            // 添加完成按钮
             if (!task.done) {
                 const completeBtn = document.createElement("button");
-                completeBtn.textContent = "完成";
+                completeBtn.innerHTML = "✓";
                 completeBtn.className = "ml-2 text-xs px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600";
+                completeBtn.title = "标记完成";
                 completeBtn.onclick = () => markComplete(task.id);
                 row.appendChild(completeBtn);
             }
+
+            // 添加删除按钮
+            const deleteBtn = document.createElement("button");
+            deleteBtn.innerHTML = "🗑️";
+            deleteBtn.className = "ml-2 text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600";
+            deleteBtn.title = "删除任务";
+            deleteBtn.onclick = () => deleteTask(task.id);
+            row.appendChild(deleteBtn);
 
             li.appendChild(row);
 
@@ -487,18 +504,66 @@
 
 
     // === 新增函数 ===
+    // 替换 updateTaskText 函数为以下代码：
+
     function updateTaskText(id, newText) {
-        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        // 找到任务实际存储的日期
+        let taskDate = formatDate(currentDate);
+        let tasks = JSON.parse(localStorage.getItem(taskDate) || "[]");
+        let taskExists = tasks.some(t => t.id === id);
+
+        // 如果在当前日期找不到，需要查找任务实际存储的日期
+        if (!taskExists) {
+            // 遍历所有 localStorage 项查找任务
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // 检查是否为日期格式的键
+                if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) {
+                    let dateTasks = JSON.parse(localStorage.getItem(key) || "[]");
+                    if (dateTasks.some(t => t.id === id)) {
+                        taskDate = key;
+                        tasks = dateTasks;
+                        break;
+                    }
+                }
+            }
+        }
+
         tasks = tasks.map(t => t.id === id ? {...t, text: newText} : t);
-        saveTasks(tasks);
+        localStorage.setItem(taskDate, JSON.stringify(tasks));
     }
 
+
+    // 替换 updateTaskPriority 函数为以下代码：
+
     function updateTaskPriority(id, priority) {
-        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        // 找到任务实际存储的日期
+        let taskDate = formatDate(currentDate);
+        let tasks = JSON.parse(localStorage.getItem(taskDate) || "[]");
+        let taskExists = tasks.some(t => t.id === id);
+
+        // 如果在当前日期找不到，需要查找任务实际存储的日期
+        if (!taskExists) {
+            // 遍历所有 localStorage 项查找任务
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // 检查是否为日期格式的键
+                if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) {
+                    let dateTasks = JSON.parse(localStorage.getItem(key) || "[]");
+                    if (dateTasks.some(t => t.id === id)) {
+                        taskDate = key;
+                        tasks = dateTasks;
+                        break;
+                    }
+                }
+            }
+        }
+
         tasks = tasks.map(t => t.id === id ? {...t, priority} : t);
-        saveTasks(tasks);
-        renderTasks(tasks); // 重新渲染，保证排序正常
+        localStorage.setItem(taskDate, JSON.stringify(tasks));
+        loadTasks(formatDate(currentDate)); // 重新加载以确保排序正确
     }
+
 
     function showToast(msg) {
         const toast = document.getElementById("toast");
@@ -512,6 +577,43 @@
             toast.classList.remove("opacity-100");
             setTimeout(() => toast.classList.add("hidden"), 300);
         }, 2000);
+    }
+
+    // 在其他任务管理函数附近添加删除函数:
+    // 替换 deleteTask 函数为以下代码：
+
+    function deleteTask(id) {
+        if (!confirm("确定要删除这个TODO吗？")) return;
+
+        // 找到任务实际存储的日期
+        let taskDate = formatDate(currentDate);
+        let tasks = JSON.parse(localStorage.getItem(taskDate) || "[]");
+        let taskExists = tasks.some(t => t.id === id);
+
+        // 如果在当前日期找不到，需要查找任务实际存储的日期
+        if (!taskExists) {
+            // 遍历所有 localStorage 项查找任务
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // 检查是否为日期格式的键
+                if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) {
+                    let dateTasks = JSON.parse(localStorage.getItem(key) || "[]");
+                    if (dateTasks.some(t => t.id === id)) {
+                        taskDate = key;
+                        tasks = dateTasks;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 从实际存储日期删除任务
+        tasks = tasks.filter(t => t.id !== id);
+        localStorage.setItem(taskDate, JSON.stringify(tasks));
+
+        // 重新加载当前视图的任务
+        loadTasks(formatDate(currentDate));
+        showToast("TODO已删除");
     }
 
 
@@ -539,27 +641,79 @@
         showToast("TODO已添加 ");
     }
 
+    // 替换 toggleTask 函数为以下代码：
+
     function toggleTask(id) {
-        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        // 找到任务实际存储的日期
+        let taskDate = formatDate(currentDate);
+        let tasks = JSON.parse(localStorage.getItem(taskDate) || "[]");
+        let taskExists = tasks.some(t => t.id === id);
+
+        // 如果在当前日期找不到，需要查找任务实际存储的日期
+        if (!taskExists) {
+            // 遍历所有 localStorage 项查找任务
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // 检查是否为日期格式的键
+                if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) {
+                    let dateTasks = JSON.parse(localStorage.getItem(key) || "[]");
+                    if (dateTasks.some(t => t.id === id)) {
+                        taskDate = key;
+                        tasks = dateTasks;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 更新任务状态
         tasks = tasks.map(t => t.id === id ? {
             ...t,
             done: !t.done,
             completedAt: !t.done ? new Date().toISOString() : null
         } : t);
-        saveTasks(tasks);
-        renderTasks(tasks);
+
+        localStorage.setItem(taskDate, JSON.stringify(tasks));
+        loadTasks(formatDate(currentDate));
     }
 
+
+    // 替换 markComplete 函数为以下代码：
+
     function markComplete(id) {
-        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        // 找到任务实际存储的日期
+        let taskDate = formatDate(currentDate);
+        let tasks = JSON.parse(localStorage.getItem(taskDate) || "[]");
+        let taskExists = tasks.some(t => t.id === id);
+
+        // 如果在当前日期找不到，需要查找任务实际存储的日期
+        if (!taskExists) {
+            // 遍历所有 localStorage 项查找任务
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // 检查是否为日期格式的键
+                if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) {
+                    let dateTasks = JSON.parse(localStorage.getItem(key) || "[]");
+                    if (dateTasks.some(t => t.id === id)) {
+                        taskDate = key;
+                        tasks = dateTasks;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 标记任务为完成
         tasks = tasks.map(t => t.id === id ? {
             ...t,
             done: true,
             completedAt: t.completedAt || new Date().toISOString()
         } : t);
-        saveTasks(tasks);
-        renderTasks(tasks);
+
+        localStorage.setItem(taskDate, JSON.stringify(tasks));
+        loadTasks(formatDate(currentDate));
     }
+
 
     // ---- 备注处理 ----
     function updateNoteText(id, text) {

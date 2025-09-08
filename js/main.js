@@ -11,6 +11,7 @@ let configPath = path.join(__dirname, "../json/config.json");
 let config = {
     togglePinShortcut: "Alt+1",
     showWindowShortcut: "Alt+2",
+    showWindowDevTools: "Alt+0",
 };
 ipcMain.on("open-image-viewer", (_, src) => {
     createImageViewer(src);
@@ -213,6 +214,19 @@ function registerShortcuts() {
             win.setAlwaysOnTop(newState);
         }
     });
+
+    // 注册 调试工具快捷键 (F12)
+    const ok3 = globalShortcut.register(config.showWindowDevTools, () => {
+        if (win && !win.isDestroyed()) {
+            win.webContents.openDevTools({mode: "detach"});
+        }
+    });
+
+    // 检查快捷键是否注册成功
+    if (!ok3) {
+        console.log("F12 快捷键注册失败");
+    }
+
 }
 
 app.whenReady().then(() => {
