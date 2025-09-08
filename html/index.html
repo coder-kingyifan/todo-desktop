@@ -88,11 +88,11 @@
                 <button onclick="setFilter('all')" id="filter-all"
                         class="px-2 py-1 rounded-lg text-xs text-black dark:text-white">全部
                 </button>
-                <button onclick="setFilter('done')" id="filter-done"
-                        class="px-2 py-1 rounded-lg text-xs text-black dark:text-white">已完成
-                </button>
                 <button onclick="setFilter('undone')" id="filter-undone"
                         class="px-2 py-1 rounded-lg text-xs text-black dark:text-white">未完成
+                </button>
+                <button onclick="setFilter('done')" id="filter-done"
+                        class="px-2 py-1 rounded-lg text-xs text-black dark:text-white">已完成
                 </button>
             </div>
 
@@ -393,10 +393,10 @@
         if (currentFilter === "done") filteredTasks = filteredTasks.filter(t => t.done);
         if (currentFilter === "undone") filteredTasks = filteredTasks.filter(t => !t.done);
 
-        renderTasks(filteredTasks);
+        renderTasks(filteredTasks, tasks); // 第二个参数是完整的任务列表（包含继承的未完成任务）
     }
 
-    function renderTasks(tasks) {
+    function renderTasks(tasks, allTasksForStats = null) {
         taskListEl.innerHTML = "";
         let filtered = tasks;
         if (currentFilter === "done") filtered = tasks.filter(t => t.done);
@@ -406,13 +406,72 @@
         const encouragementEl = document.getElementById("encouragementMessage");
 
         if (filtered.length === 0) {
-            statsEl.textContent = "今日未完成 0 / 0";
-            // 隐藏鼓励信息
-            if (encouragementEl) {
-                encouragementEl.classList.add("hidden");
+            // 获取用于统计的任务列表
+            let statsTasks;
+            if (allTasksForStats) {
+                // 如果传入了完整的任务列表，使用它进行统计
+                statsTasks = allTasksForStats;
+            } else {
+                // 否则从 localStorage 重新获取
+                statsTasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+
+                // 如果今天是过去或今天，则继承前一天未完成任务（仅用于展示）
+                if (currentDate <= new Date()) {
+                    const prevDay = new Date(currentDate);
+                    prevDay.setDate(prevDay.getDate() - 1);
+                    const prevDayStr = formatDate(prevDay);
+
+                    let previousTasks = JSON.parse(localStorage.getItem(prevDayStr) || "[]");
+                    let undoneFromPrevious = previousTasks.filter(t => !t.done);
+                    let existingIds = new Set(statsTasks.map(t => t.id));
+                    let newTasks = undoneFromPrevious.filter(t => !existingIds.has(t.id));
+                    statsTasks.push(...newTasks);
+                }
+            }
+
+            // 根据当前筛选和搜索状态设置统计文本
+            let statsText;
+            const searchTerm = searchInput.value.trim();
+            const totalTasks = statsTasks.length;
+            const undoneCount = statsTasks.filter(t => !t.done).length;
+            const doneCount = statsTasks.filter(t => t.done).length;
+
+            if (searchTerm) {
+                // 有搜索时，显示搜索结果的统计
+                if (currentFilter === "done") {
+                    statsText = `搜索结果已完成 0 / 0`;
+                } else if (currentFilter === "undone") {
+                    statsText = `搜索结果未完成 0 / 0`;
+                } else {
+                    statsText = `搜索结果未完成 0 / 0`;
+                }
+            } else {
+                // 无搜索时，显示完整统计
+                if (currentFilter === "done") {
+                    statsText = `今日已完成 0 / ${totalTasks}`;
+                } else if (currentFilter === "undone") {
+                    statsText = `今日未完成 0 / ${totalTasks}`;
+                } else {
+                    statsText = `今日未完成 ${undoneCount} / ${totalTasks}`;
+                }
+            }
+            statsEl.textContent = statsText;
+
+            // 检查是否所有任务都已完成（基于统计任务，而不是显示任务）
+            if (undoneCount === 0 && totalTasks > 0) {
+                // 显示鼓励信息
+                if (encouragementEl) {
+                    encouragementEl.classList.remove("hidden");
+                }
+            } else {
+                // 隐藏鼓励信息
+                if (encouragementEl) {
+                    encouragementEl.classList.add("hidden");
+                }
             }
             return;
         }
+
 
         const prioOrder = {high: 1, medium: 2, low: 3};
         filtered.sort((a, b) => {
@@ -558,11 +617,83 @@
             taskListEl.appendChild(li);
         });
 
-        const undoneCount = tasks.filter(t => !t.done).length;
-        statsEl.textContent = `今日未完成 ${undoneCount} / ${tasks.length}`;
+        // 获取当前日期的所有任务（不带任何筛选）
+        let allTasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
 
-        // 检查是否所有任务都已完成
-        if (undoneCount === 0 && tasks.length > 0) {
+        // 如果今天是过去或今天，则继承前一天未完成的任务（仅用于展示）
+        if (currentDate <= new Date()) {
+            const prevDayStr = formatDate(new Date(currentDate));
+            const prevDay = new Date(prevDayStr);
+            prevDay.setDate(prevDay.getDate() - 1);
+            const prevDayStr2 = formatDate(prevDay);
+
+            let previousTasks = JSON.parse(localStorage.getItem(prevDayStr2) || "[]");
+            let undoneFromPrevious = previousTasks.filter(t => !t.done);
+            let existingIds = new Set(allTasks.map(t => t.id));
+            let newTasks = undoneFromPrevious.filter(t => !existingIds.has(t.id));
+            allTasks.push(...newTasks);
+        }
+
+        // 计算总数和各状态数量
+        // 获取用于统计的任务列表
+        let statsTasks;
+        if (allTasksForStats) {
+            // 如果传入了完整的任务列表，使用它进行统计
+            statsTasks = allTasksForStats;
+        } else {
+            // 否则从 localStorage 重新获取
+            statsTasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+
+            // 如果今天是过去或今天，则继承前一天未完成任务（仅用于展示）
+            if (currentDate <= new Date()) {
+                const prevDay = new Date(currentDate);
+                prevDay.setDate(prevDay.getDate() - 1);
+                const prevDayStr = formatDate(prevDay);
+
+                let previousTasks = JSON.parse(localStorage.getItem(prevDayStr) || "[]");
+                let undoneFromPrevious = previousTasks.filter(t => !t.done);
+                let existingIds = new Set(statsTasks.map(t => t.id));
+                let newTasks = undoneFromPrevious.filter(t => !existingIds.has(t.id));
+                statsTasks.push(...newTasks);
+            }
+        }
+
+// 根据当前筛选和搜索状态设置统计文本
+        let statsText;
+        const searchTerm = searchInput.value.trim();
+        const totalTasks = statsTasks.length;
+        const doneCount = statsTasks.filter(t => t.done).length;
+        const undoneCount = statsTasks.filter(t => !t.done).length;
+
+        if (searchTerm) {
+            // 有搜索时，显示搜索结果的统计
+            const searchTotal = tasks.length;
+            const searchDone = tasks.filter(t => t.done).length;
+            const searchUndone = tasks.filter(t => !t.done).length;
+
+            if (currentFilter === "done") {
+                statsText = `搜索结果已完成 ${searchDone} / ${searchTotal}`;
+            } else if (currentFilter === "undone") {
+                statsText = `搜索结果未完成 ${searchUndone} / ${searchTotal}`;
+            } else {
+                statsText = `搜索结果未完成 ${searchUndone} / ${searchTotal}`;
+            }
+        } else {
+            // 无搜索时，显示完整统计
+            if (currentFilter === "done") {
+                statsText = `今日已完成 ${doneCount} / ${totalTasks}`;
+            } else if (currentFilter === "undone") {
+                // 关键修复：未完成筛选下显示未完成数/总任务数
+                statsText = `今日未完成 ${undoneCount} / ${totalTasks}`;
+            } else {
+                statsText = `今日未完成 ${undoneCount} / ${totalTasks}`;
+            }
+        }
+
+        statsEl.textContent = statsText;
+
+// 检查是否所有任务都已完成（基于统计任务，而不是显示任务）
+        if (undoneCount === 0 && totalTasks > 0) {
             // 显示鼓励信息
             if (encouragementEl) {
                 encouragementEl.classList.remove("hidden");
@@ -574,7 +705,6 @@
             }
         }
     }
-
 
     // === 新增函数 ===
     function updateTaskText(id, newText) {
