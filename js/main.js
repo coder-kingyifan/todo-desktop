@@ -114,6 +114,7 @@ function createWindow() {
             nodeIntegration: true,   // ✅ 允许渲染进程用 require
             contextIsolation: false, // ✅ 关闭隔离，避免报错
         },
+        skipTaskbar: true, // 不在任务栏显示图标
     });
 
     // ✅ 改这里：加载本地 index.html

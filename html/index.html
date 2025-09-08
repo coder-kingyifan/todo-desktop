@@ -75,32 +75,56 @@
         </button>
     </div>
 
-
-    <!-- 筛选 + 一键完成 -->
+    <!-- 筛选 + 搜索 + 一键完成 -->
     <div class="flex justify-between items-center mb-4">
         <!-- 左边 前一天 -->
         <button onclick="prevDay()"
                 class="text-sm text-green-600 dark:text-green-300 hover:underline">← 前一天
         </button>
 
-        <!-- 中间 筛选 -->
-        <div class="flex gap-2">
-            <button onclick="setFilter('all')" id="filter-all"
-                    class="px-3 py-1 rounded-lg text-sm text-black dark:text-white">全部
-            </button>
-            <button onclick="setFilter('done')" id="filter-done"
-                    class="px-3 py-1 rounded-lg text-sm text-black dark:text-white">已完成
-            </button>
-            <button onclick="setFilter('undone')" id="filter-undone"
-                    class="px-3 py-1 rounded-lg text-sm text-black dark:text-white">未完成
-            </button>
+        <!-- 中间 筛选和搜索 -->
+        <div class="flex gap-2 items-center">
+            <div class="flex gap-1">
+                <button onclick="setFilter('all')" id="filter-all"
+                        class="px-2 py-1 rounded-lg text-xs text-black dark:text-white">全部
+                </button>
+                <button onclick="setFilter('done')" id="filter-done"
+                        class="px-2 py-1 rounded-lg text-xs text-black dark:text-white">已完成
+                </button>
+                <button onclick="setFilter('undone')" id="filter-undone"
+                        class="px-2 py-1 rounded-lg text-xs text-black dark:text-white">未完成
+                </button>
+            </div>
+
+            <div class="relative">
+                <input type="text" id="searchInput" placeholder="搜索..."
+                       class="w-20 md:w-24 px-2 py-1 pr-6 rounded-lg border border-gray-300 dark:border-gray-600
+           bg-white dark:bg-gray-800 dark:text-gray-100 text-xs
+           focus:outline-none focus:ring-1 focus:ring-green-400 focus:w-28 md:focus:w-36 transition-all"/>
+                <div class="absolute right-6 top-1.5 text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <!-- 清除搜索按钮 -->
+                <button id="clearSearch"
+                        class="absolute right-1 top-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <!-- 右边 今天按钮（可隐藏） -->
         <span id="todayBtnWrapper">
-    <button onclick="today()"
-            class="text-sm text-green-600 dark:text-green-300 hover:underline">今天 →</button>
-  </span>
+        <button onclick="today()"
+                class="text-sm text-green-600 dark:text-green-300 hover:underline">今天 →
+        </button>
+    </span>
     </div>
 
 
@@ -110,6 +134,11 @@
         <button onclick="completeAllToday()"
                 class="px-3 py-1 text-sm rounded-lg bg-green-500 text-white hover:bg-green-600 transition">一键完成全部
         </button>
+    </div>
+
+    <!--  添加鼓励信息元素 -->
+    <div id="encouragementMessage" class="text-center text-green-600 dark:text-green-400 font-bold text-lg mt-2 hidden">
+        🎉 您真棒！今日TODO均已完成
     </div>
 
 
@@ -217,6 +246,9 @@
     let currentFilter = "all";
     const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 
+    const searchInput = document.getElementById("searchInput");
+    const clearSearchBtn = document.getElementById("clearSearch");
+
     function genId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     }
@@ -284,7 +316,7 @@
 
 
     // ---------------- TODO管理 ----------------
-    // 替换整个 loadTasks 函数为以下代码：
+
 
     function loadTasks(dateStr) {
         const d = new Date(dateStr);
@@ -305,11 +337,19 @@
         }
 
         // 控制 "今天" 按钮显示
+        // 控制 "今天" 按钮显示
         const todayBtnWrapper = document.getElementById("todayBtnWrapper");
-        if (dateStr === todayStr) {
+
+        // 如果搜索框获得焦点，则隐藏"今天"按钮，否则根据日期判断
+        if (document.activeElement === searchInput) {
             todayBtnWrapper.classList.add("hidden");
         } else {
-            todayBtnWrapper.classList.remove("hidden");
+            // 否则根据当前日期判断
+            if (dateStr === todayStr) {
+                todayBtnWrapper.classList.add("hidden");
+            } else {
+                todayBtnWrapper.classList.remove("hidden");
+            }
         }
 
         // 载入任务
@@ -339,9 +379,22 @@
             tasks.push(...newTasks);
         }
 
-        renderTasks(tasks);
-    }
+        // 应用搜索过滤
+        let filteredTasks = tasks;
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        if (searchTerm) {
+            filteredTasks = filteredTasks.filter(task =>
+                task.text.toLowerCase().includes(searchTerm) ||
+                (task.note && task.note.text && task.note.text.toLowerCase().includes(searchTerm))
+            );
+        }
 
+        // 应用状态过滤
+        if (currentFilter === "done") filteredTasks = filteredTasks.filter(t => t.done);
+        if (currentFilter === "undone") filteredTasks = filteredTasks.filter(t => !t.done);
+
+        renderTasks(filteredTasks);
+    }
 
     function renderTasks(tasks) {
         taskListEl.innerHTML = "";
@@ -349,8 +402,15 @@
         if (currentFilter === "done") filtered = tasks.filter(t => t.done);
         if (currentFilter === "undone") filtered = tasks.filter(t => !t.done);
 
+        // 获取鼓励信息元素
+        const encouragementEl = document.getElementById("encouragementMessage");
+
         if (filtered.length === 0) {
             statsEl.textContent = "今日未完成 0 / 0";
+            // 隐藏鼓励信息
+            if (encouragementEl) {
+                encouragementEl.classList.add("hidden");
+            }
             return;
         }
 
@@ -500,12 +560,23 @@
 
         const undoneCount = tasks.filter(t => !t.done).length;
         statsEl.textContent = `今日未完成 ${undoneCount} / ${tasks.length}`;
+
+        // 检查是否所有任务都已完成
+        if (undoneCount === 0 && tasks.length > 0) {
+            // 显示鼓励信息
+            if (encouragementEl) {
+                encouragementEl.classList.remove("hidden");
+            }
+        } else {
+            // 隐藏鼓励信息
+            if (encouragementEl) {
+                encouragementEl.classList.add("hidden");
+            }
+        }
     }
 
 
     // === 新增函数 ===
-    // 替换 updateTaskText 函数为以下代码：
-
     function updateTaskText(id, newText) {
         // 找到任务实际存储的日期
         let taskDate = formatDate(currentDate);
@@ -532,9 +603,6 @@
         tasks = tasks.map(t => t.id === id ? {...t, text: newText} : t);
         localStorage.setItem(taskDate, JSON.stringify(tasks));
     }
-
-
-    // 替换 updateTaskPriority 函数为以下代码：
 
     function updateTaskPriority(id, priority) {
         // 找到任务实际存储的日期
@@ -580,8 +648,6 @@
     }
 
     // 在其他任务管理函数附近添加删除函数:
-    // 替换 deleteTask 函数为以下代码：
-
     function deleteTask(id) {
         if (!confirm("确定要删除这个TODO吗？")) return;
 
@@ -641,8 +707,6 @@
         showToast("TODO已添加 ");
     }
 
-    // 替换 toggleTask 函数为以下代码：
-
     function toggleTask(id) {
         // 找到任务实际存储的日期
         let taskDate = formatDate(currentDate);
@@ -676,9 +740,6 @@
         localStorage.setItem(taskDate, JSON.stringify(tasks));
         loadTasks(formatDate(currentDate));
     }
-
-
-    // 替换 markComplete 函数为以下代码：
 
     function markComplete(id) {
         // 找到任务实际存储的日期
@@ -786,7 +847,9 @@
         if (f === "all") document.getElementById("filter-all").classList.add("bg-green-200", "dark:bg-green-700", "text-black", "dark:text-white");
         if (f === "done") document.getElementById("filter-done").classList.add("bg-lime-200", "dark:bg-lime-700", "text-black", "dark:text-white");
         if (f === "undone") document.getElementById("filter-undone").classList.add("bg-red-200", "dark:bg-red-700", "text-black", "dark:text-white");
-        renderTasks(JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]"));
+
+        // 重新加载任务以应用筛选器和当前搜索
+        loadTasks(formatDate(currentDate));
     }
 
     function openSettings() {
@@ -848,7 +911,6 @@
         });
     }
 
-
     // 点击遮罩关闭
     imgPreview.onclick = e => {
         if (e.target === imgPreview) { // 只点背景时才关闭
@@ -900,6 +962,48 @@
     priorityEl.value = localStorage.getItem("defaultPriority") || "medium";
     loadTasks(formatDate(currentDate));
     setFilter("all");
+
+    // 搜索功能
+    searchInput.addEventListener("input", () => {
+        // 根据输入框是否有内容来显示/隐藏清除按钮
+        if (searchInput.value.trim() !== "") {
+            clearSearchBtn.classList.remove("hidden");
+        } else {
+            clearSearchBtn.classList.add("hidden");
+        }
+        loadTasks(formatDate(currentDate)); // 重新加载以应用搜索过滤
+    });
+
+
+    // 清除搜索
+    clearSearchBtn.addEventListener("click", () => {
+        searchInput.value = "";
+        clearSearchBtn.classList.add("hidden");
+        loadTasks(formatDate(currentDate)); // 重新加载以清除搜索过滤
+    });
+    // 搜索框失去焦点时恢复今天按钮状态
+    searchInput.addEventListener("blur", () => {
+        // 延迟一小段时间确保失去焦点后再判断
+        setTimeout(() => {
+            const todayBtnWrapper = document.getElementById("todayBtnWrapper");
+            const todayStr = formatDate(new Date());
+            const dateStr = formatDate(currentDate);
+
+            // 根据当前日期判断是否显示今天按钮
+            if (dateStr === todayStr) {
+                todayBtnWrapper.classList.add("hidden");
+            } else {
+                todayBtnWrapper.classList.remove("hidden");
+            }
+        }, 10);
+    });
+
+    // 搜索框获得焦点时隐藏今天按钮
+    searchInput.addEventListener("focus", () => {
+        const todayBtnWrapper = document.getElementById("todayBtnWrapper");
+        todayBtnWrapper.classList.add("hidden");
+    });
+
 </script>
 <!-- 中间提示框 -->
 <div id="toast"
