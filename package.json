@@ -1,6 +1,6 @@
 {
   "name": "hanhan-todo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "憨憨每日Todo",
   "author": "kingyifan@88.com",
   "main": "./js/main.js",
