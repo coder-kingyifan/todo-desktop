@@ -1,7 +1,7 @@
 const {app, BrowserWindow, Tray, Menu, nativeImage, globalShortcut, ipcMain} = require("electron");
 const path = require("path");
 const fs = require("fs");
-const {screen} = require("electron");  // ✅ 需要引入
+const {screen, dialog} = require("electron");  // ✅ 需要引入
 let viewerWin = null;
 const AutoLaunch = require("auto-launch");
 let win;
@@ -16,6 +16,34 @@ let config = {
 ipcMain.on("open-image-viewer", (_, src) => {
     createImageViewer(src);
 });
+
+ipcMain.handle("show-delete-dialog", async (event) => {
+
+    const response = await dialog.showMessageBox(win, {
+        type: "question",
+        title: "温馨提示",
+        message: "确定要删除这个TODO吗？",
+        buttons: ["确定", "取消"],
+    });
+    console.log("用户选择:", response);
+    return response.response === 0;
+});
+
+ipcMain.handle("show-clear-dialog", async () => {
+    const {dialog} = require("electron");
+    const response = await dialog.showMessageBox(win, {
+        type: "warning",
+        title: "温馨提示",
+        message: "确定要删除所有TODO数据吗？此操作不可恢复！！！",
+        buttons: ["确定", "取消"],
+    });
+    return response.response === 0;
+});
+
+ipcMain.on("focus-window", () => {
+    if (win) win.focus();
+});
+
 const autoLauncher = new AutoLaunch({
     name: "憨憨每日Todo",
     path: app.getPath("exe"), // 当前 exe 路径
@@ -31,7 +59,7 @@ function createImageViewer() {
         alwaysOnTop: true,
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false,
+            contextIsolation: false
         },
         skipTaskbar: true, // 不在任务栏显示图标
     });
@@ -111,8 +139,9 @@ function createWindow() {
         minimizable: true,
         fullscreenable: false,
         webPreferences: {
-            nodeIntegration: true,   // ✅ 允许渲染进程用 require
-            contextIsolation: false, // ✅ 关闭隔离，避免报错
+            nodeIntegration: true,
+            contextIsolation: false,
+            preload: path.join(__dirname, 'preload.js')
         },
         skipTaskbar: true, // 不在任务栏显示图标
     });

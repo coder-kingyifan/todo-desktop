@@ -152,7 +152,7 @@
 
 
 </div>
-</div>
+
 
 <!-- 设置页面 -->
 <div id="settingsPage" class="hidden w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
@@ -248,6 +248,8 @@
 
     const searchInput = document.getElementById("searchInput");
     const clearSearchBtn = document.getElementById("clearSearch");
+
+    const {ipcRenderer} = require("electron");
 
     function genId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
@@ -779,37 +781,42 @@
 
     // 在其他任务管理函数附近添加删除函数:
     function deleteTask(id) {
-        if (!confirm("确定要删除这个TODO吗？")) return;
+        window.electronAPI.showDeleteDialog().then((confirmed) => {
+            if (confirmed) {
+                // 找到任务实际存储的日期
+                let taskDate = formatDate(currentDate);
+                let tasks = JSON.parse(localStorage.getItem(taskDate) || "[]");
+                let taskExists = tasks.some(t => t.id === id);
 
-        // 找到任务实际存储的日期
-        let taskDate = formatDate(currentDate);
-        let tasks = JSON.parse(localStorage.getItem(taskDate) || "[]");
-        let taskExists = tasks.some(t => t.id === id);
-
-        // 如果在当前日期找不到，需要查找任务实际存储的日期
-        if (!taskExists) {
-            // 遍历所有 localStorage 项查找任务
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                // 检查是否为日期格式的键
-                if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) {
-                    let dateTasks = JSON.parse(localStorage.getItem(key) || "[]");
-                    if (dateTasks.some(t => t.id === id)) {
-                        taskDate = key;
-                        tasks = dateTasks;
-                        break;
+                // 如果在当前日期找不到，需要查找任务实际存储的日期
+                if (!taskExists) {
+                    // 遍历所有 localStorage 项查找任务
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        // 检查是否为日期格式的键
+                        if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) {
+                            let dateTasks = JSON.parse(localStorage.getItem(key) || "[]");
+                            if (dateTasks.some(t => t.id === id)) {
+                                taskDate = key;
+                                tasks = dateTasks;
+                                break;
+                            }
+                        }
                     }
                 }
+
+                // 从实际存储日期删除任务
+                tasks = tasks.filter(t => t.id !== id);
+                localStorage.setItem(taskDate, JSON.stringify(tasks));
+
+                // 重新加载当前视图的任务
+                loadTasks(formatDate(currentDate));
+                showToast("TODO已删除");
+
             }
-        }
-
-        // 从实际存储日期删除任务
-        tasks = tasks.filter(t => t.id !== id);
-        localStorage.setItem(taskDate, JSON.stringify(tasks));
-
-        // 重新加载当前视图的任务
-        loadTasks(formatDate(currentDate));
-        showToast("TODO已删除");
+        }).catch(err => {
+            console.error("删除对话框错误:", err); // ✅ 增加错误输出
+        });
     }
 
 
@@ -1014,10 +1021,12 @@
     }
 
     function clearAllData() {
-        if (confirm("憨憨温馨提示：确定要删除所有TODO数据吗？此操作不可恢复！！！")) {
-            localStorage.clear();
-            location.reload();
-        }
+        window.electronAPI.showClearDialog().then((confirmed) => {
+            if (confirmed) {
+                localStorage.clear();
+                location.reload();
+            }
+        });
     }
 
     // ---------------- 图片预览 ----------------
@@ -1025,7 +1034,7 @@
     let currentPreviewIndex = 0;
 
     function showImage(src) {
-        const {ipcRenderer} = require("electron");
+
         ipcRenderer.send("open-image-viewer", src);
 
         ipcRenderer.once("delete-image", (_, imgSrc) => {

@@ -1,6 +1,7 @@
-const { contextBridge, ipcRenderer } = require("electron");
+const {ipcRenderer} = require('electron');
 
-contextBridge.exposeInMainWorld("electronAPI", {
-    toggleAlwaysOnTop: () => ipcRenderer.send("toggle-always-on-top"),
-    onAlwaysOnTopChanged: (cb) => ipcRenderer.on("always-on-top-changed", (e, v) => cb(v))
-});
+// 在无上下文隔离模式下直接挂载到 window 对象
+window.electronAPI = {
+    showClearDialog: () => ipcRenderer.invoke('show-clear-dialog'),
+    showDeleteDialog: () => ipcRenderer.invoke('show-delete-dialog')
+};
