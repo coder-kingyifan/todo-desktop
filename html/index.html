@@ -132,15 +132,14 @@
     <div class="flex justify-end items-center gap-3 mb-4">
         <div id="stats" class="text-sm text-gray-600 dark:text-gray-300"></div>
         <button onclick="completeAllToday()"
-                class="px-3 py-1 text-sm rounded-lg bg-green-500 text-white hover:bg-green-600 transition">一键完成全部
+                class="px-3 py-1 text-sm rounded-lg bg-green-500 text-white hover:bg-green-600 transition">完成今日全部TODO
         </button>
     </div>
 
     <!--  添加鼓励信息元素 -->
     <div id="encouragementMessage" class="text-center text-green-600 dark:text-green-400 font-bold text-lg mt-2 hidden">
-        🎉 您真棒！今日TODO均已完成
+        🎉 辛苦啦，今日TODO都完成啦~
     </div>
-
 
     <!-- 待办列表 -->
     <ul id="taskList" class="space-y-3 flex-1 overflow-y-auto"></ul>
@@ -149,7 +148,6 @@
     <div class="mt-6 text-center text-gray-500 dark:text-gray-400 text-sm">
         作者：KingYiFan
     </div>
-
 
 </div>
 
@@ -288,7 +286,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "todo-data.json";
+        a.download = "憨憨TODO_DATA.json";
         a.click();
         URL.revokeObjectURL(url);
         showToast("✅ 数据已导出");
@@ -338,7 +336,6 @@
             dateEl.textContent = `${weekday}`;
         }
 
-        // 控制 "今天" 按钮显示
         // 控制 "今天" 按钮显示
         const todayBtnWrapper = document.getElementById("todayBtnWrapper");
 
@@ -660,7 +657,7 @@
             }
         }
 
-// 根据当前筛选和搜索状态设置统计文本
+        // 根据当前筛选和搜索状态设置统计文本
         let statsText;
         const searchTerm = searchInput.value.trim();
         const totalTasks = statsTasks.length;
@@ -694,7 +691,7 @@
 
         statsEl.textContent = statsText;
 
-// 检查是否所有任务都已完成（基于统计任务，而不是显示任务）
+        // 检查是否所有任务都已完成（基于统计任务，而不是显示任务）
         if (undoneCount === 0 && totalTasks > 0) {
             // 显示鼓励信息
             if (encouragementEl) {
@@ -840,7 +837,7 @@
         });
         saveTasks(tasks);
         newTaskEl.value = "";
-        renderTasks(tasks);
+        loadTasks(formatDate(currentDate)); // 重新加载以确保正确显示继承任务
         showToast("TODO已添加 ");
     }
 
@@ -960,9 +957,9 @@
 
         tasks = tasks.map(t => t.done ? t : {...t, done: true, completedAt: now});
         saveTasks(tasks);
-        renderTasks(tasks);
+        loadTasks(formatDate(currentDate)); // 重新加载以确保正确显示继承任务
 
-        showToast(`一键完成，共完成 ${undoneTasks} 个TODO`);
+        showToast(`一键完成，共完成今日 ${undoneTasks} 个TODO`);
     }
 
 

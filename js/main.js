@@ -1,7 +1,7 @@
 const {app, BrowserWindow, Tray, Menu, nativeImage, globalShortcut, ipcMain} = require("electron");
 const path = require("path");
 const fs = require("fs");
-const {screen, dialog} = require("electron");  // ✅ 需要引入
+const {screen, dialog} = require("electron");
 let viewerWin = null;
 const AutoLaunch = require("auto-launch");
 let win;
@@ -22,10 +22,9 @@ ipcMain.handle("show-delete-dialog", async (event) => {
     const response = await dialog.showMessageBox(win, {
         type: "question",
         title: "温馨提示",
-        message: "确定要删除这个TODO吗？",
+        message: "您确定要删除这个TODO吗？",
         buttons: ["确定", "取消"],
     });
-    console.log("用户选择:", response);
     return response.response === 0;
 });
 
@@ -34,7 +33,7 @@ ipcMain.handle("show-clear-dialog", async () => {
     const response = await dialog.showMessageBox(win, {
         type: "warning",
         title: "温馨提示",
-        message: "确定要删除所有TODO数据吗？此操作不可恢复！！！",
+        message: "您确定要删除所有TODO数据吗？此操作不可恢复！！！",
         buttons: ["确定", "取消"],
     });
     return response.response === 0;
@@ -67,8 +66,8 @@ function createImageViewer() {
     viewerWin.loadFile("./html/viewer.html");
 
     viewerWin.on("close", (e) => {
-        e.preventDefault();         // ❌ 不销毁
-        viewerWin.hide();           // ✅ 隐藏即可
+        e.preventDefault();
+        viewerWin.hide();
     });
 }
 
@@ -86,7 +85,6 @@ ipcMain.on("delete-image", (event, data) => {
     if (viewerWin) viewerWin.hide();
 });
 
-// 🚀 读取配置文件
 // 读取配置
 function loadConfig() {
     if (fs.existsSync(configPath)) {
@@ -107,7 +105,7 @@ function openAboutWindow() {
         alwaysOnTop: true,
         autoHideMenuBar: true,
         title: "关于 憨憨每日Todo",
-        icon: path.join(__dirname, "../static/icon.png"), // ✅ 设置和主程序相同的图标
+        icon: path.join(__dirname, "../static/icon.png"), // 设置和主程序相同的图标
         webPreferences: {
             nodeIntegration: true,
         },
@@ -146,7 +144,6 @@ function createWindow() {
         skipTaskbar: true, // 不在任务栏显示图标
     });
 
-    // ✅ 改这里：加载本地 index.html
     win.loadFile("./html/index.html");
 
     win.setMenuBarVisibility(false);
@@ -251,12 +248,6 @@ function registerShortcuts() {
             win.webContents.openDevTools({mode: "detach"});
         }
     });
-
-    // 检查快捷键是否注册成功
-    if (!ok3) {
-        console.log("F12 快捷键注册失败");
-    }
-
 }
 
 app.whenReady().then(() => {
