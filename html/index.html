@@ -955,7 +955,25 @@
     }
 
     function addNoteImage(id, imgData) {
-        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        let taskDate = formatDate(currentDate);
+        let tasks = JSON.parse(localStorage.getItem(taskDate) || "[]");
+        let taskExists = tasks.some(t => t.id === id);
+        // 如果在当前日期找不到，需要查找任务实际存储的日期
+        if (!taskExists) {
+            // 遍历所有 localStorage 项查找任务
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // 检查是否为日期格式的键
+                if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) {
+                    let dateTasks = JSON.parse(localStorage.getItem(key) || "[]");
+                    if (dateTasks.some(t => t.id === id)) {
+                        taskDate = key;
+                        tasks = dateTasks;
+                        break;
+                    }
+                }
+            }
+        }
         tasks = tasks.map(t => {
             if (t.id === id) {
                 const images = t.note?.images || [];
@@ -963,12 +981,32 @@
             }
             return t;
         });
-        saveTasks(tasks);
-        renderTasks(tasks);
+        localStorage.setItem(taskDate, JSON.stringify(tasks));
+        loadTasks(formatDate(currentDate));
     }
 
     function removeNoteImage(id, idx) {
-        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
+        // 找到任务实际存储的日期
+        let taskDate = formatDate(currentDate);
+        let tasks = JSON.parse(localStorage.getItem(taskDate) || "[]");
+        let taskExists = tasks.some(t => t.id === id);
+        // 如果在当前日期找不到，需要查找任务实际存储的日期
+        if (!taskExists) {
+            // 遍历所有 localStorage 项查找任务
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // 检查是否为日期格式的键
+                if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) {
+                    let dateTasks = JSON.parse(localStorage.getItem(key) || "[]");
+                    if (dateTasks.some(t => t.id === id)) {
+                        taskDate = key;
+                        tasks = dateTasks;
+                        break;
+                    }
+                }
+            }
+        }
+
         tasks = tasks.map(t => {
             if (t.id === id) {
                 const images = [...(t.note?.images || [])];
@@ -977,8 +1015,11 @@
             }
             return t;
         });
-        saveTasks(tasks);
-        renderTasks(tasks);
+        // 保存到正确的日期位置
+        localStorage.setItem(taskDate, JSON.stringify(tasks));
+
+        // 重新加载当前视图的任务
+        loadTasks(formatDate(currentDate));
     }
 
     function completeAllToday() {
@@ -1080,20 +1121,7 @@
     let currentPreviewIndex = 0;
 
     function showImage(src) {
-
         ipcRenderer.send("open-image-viewer", src);
-
-        ipcRenderer.once("delete-image", (_, imgSrc) => {
-            // 从本地数据里删除
-            tasks = tasks.map(t => {
-                if (t.image === imgSrc) {
-                    return {...t, image: null};
-                }
-                return t;
-            });
-            saveTasks(tasks);
-            renderTasks(tasks);
-        });
     }
 
     // 点击遮罩关闭
