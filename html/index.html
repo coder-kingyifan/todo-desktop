@@ -485,9 +485,9 @@
                 if (currentFilter === "done") {
                     statsText = `今日已完成 0 / ${totalTasks}`;
                 } else if (currentFilter === "undone") {
-                    statsText = `未完成 (含历史)0 / ${totalTasks}`;
+                    statsText = `未完成 (含历史) 0 / ${totalTasks}`;
                 } else {
-                    statsText = `未完成 (含历史)${undoneCount} / ${totalTasks}`;
+                    statsText = `未完成 (含历史) ${undoneCount} / ${totalTasks}`;
                 }
             }
             statsEl.textContent = statsText;
@@ -719,9 +719,9 @@
                 statsText = `今日已完成 ${doneCount} / ${totalTasks}`;
             } else if (currentFilter === "undone") {
                 // 关键修复：未完成筛选下显示未完成数/总任务数
-                statsText = `未完成 (含历史)${undoneCount} / ${totalTasks}`;
+                statsText = `未完成 (含历史) ${undoneCount} / ${totalTasks}`;
             } else {
-                statsText = `未完成 (含历史)${undoneCount} / ${totalTasks}`;
+                statsText = `未完成 (含历史) ${undoneCount} / ${totalTasks}`;
             }
         }
 
