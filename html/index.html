@@ -64,9 +64,9 @@
         <select id="priority"
                 class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600
                dark:bg-gray-800 dark:text-gray-100 shadow-sm">
-            <option value="low">🌱 低</option>
-            <option value="medium">⚡ 中</option>
             <option value="high">🔥 高</option>
+            <option value="medium">⚡ 中</option>
+            <option value="low">🌱 低</option>
         </select>
         <button onclick="addTask()"
                 class="px-6 py-2 rounded-xl font-semibold text-white
@@ -160,9 +160,9 @@
         <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">默认优先级</label>
         <select id="defaultPriority"
                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 dark:bg-gray-700 dark:text-gray-100">
-            <option value="low">🌱 低</option>
-            <option value="medium">⚡ 中</option>
             <option value="high">🔥 高</option>
+            <option value="medium">⚡ 中</option>
+            <option value="low">🌱 低</option>
         </select>
     </div>
 
@@ -359,24 +359,53 @@
         const viewingDate = new Date(dateStr);
         const now = new Date();
 
-        // 对于今天及之前的日期，继承前一天未完成的任务
+        // 对于今天及之前的日期，继承历史未完成的任务
         if (viewingDate <= now) {
-            // 获取前一天日期
-            const prevDay = new Date(viewingDate);
-            prevDay.setDate(prevDay.getDate() - 1);
-            const prevDayStr = formatDate(prevDay);
+            // 获取所有历史未完成任务（避免递归导致栈溢出）
+            const getAllUndoneHistoricalTasks = (currentDate) => {
+                const result = [];
+                const checkedDates = new Set(); // 避免重复检查同一天
+                let checkDate = new Date(currentDate);
 
-            // 获取前一天的任务
-            let previousTasks = JSON.parse(localStorage.getItem(prevDayStr) || "[]");
-            let undoneFromPrevious = previousTasks.filter(t => !t.done);
+                // 最多回溯365天，避免无限循环
+                for (let i = 0; i < 365; i++) {
+                    checkDate.setDate(checkDate.getDate() - 1);
+
+                    // 如果已经检查过这一天或者到了未来日期，则停止
+                    const checkDateStr = formatDate(checkDate);
+                    if (checkedDates.has(checkDateStr)) {
+                        break;
+                    }
+
+                    // 如果检查日期到了未来，则停止
+                    if (checkDate > now) {
+                        break;
+                    }
+
+                    checkedDates.add(checkDateStr);
+
+                    // 获取这一天的任务
+                    let historicalTasks = JSON.parse(localStorage.getItem(checkDateStr) || "[]");
+                    let undoneTasks = historicalTasks.filter(t => !t.done);
+
+                    // 添加到结果中
+                    result.push(...undoneTasks);
+                }
+
+                return result;
+            };
+
+            // 获取历史未完成任务
+            const historyUndoneTasks = getAllUndoneHistoricalTasks(viewingDate);
 
             // 检查避免重复（按 id 判断）
             let existingIds = new Set(tasks.map(t => t.id));
-            let newTasks = undoneFromPrevious.filter(t => !existingIds.has(t.id));
+            let newTasks = historyUndoneTasks.filter(t => !existingIds.has(t.id));
 
-            // 将前一天未完成任务添加到当前日期（仅用于展示）
+            // 将历史未完成任务添加到当前日期（仅用于展示）
             tasks.push(...newTasks);
         }
+
 
         // 应用搜索过滤
         let filteredTasks = tasks;
