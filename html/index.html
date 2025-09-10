@@ -470,7 +470,6 @@
             const searchTerm = searchInput.value.trim();
             const totalTasks = statsTasks.length;
             const undoneCount = statsTasks.filter(t => !t.done).length;
-            const doneCount = statsTasks.filter(t => t.done).length;
 
             if (searchTerm) {
                 // 有搜索时，显示搜索结果的统计
@@ -486,9 +485,9 @@
                 if (currentFilter === "done") {
                     statsText = `今日已完成 0 / ${totalTasks}`;
                 } else if (currentFilter === "undone") {
-                    statsText = `今日未完成 0 / ${totalTasks}`;
+                    statsText = `未完成 (含历史)0 / ${totalTasks}`;
                 } else {
-                    statsText = `今日未完成 ${undoneCount} / ${totalTasks}`;
+                    statsText = `未完成 (含历史)${undoneCount} / ${totalTasks}`;
                 }
             }
             statsEl.textContent = statsText;
@@ -720,9 +719,9 @@
                 statsText = `今日已完成 ${doneCount} / ${totalTasks}`;
             } else if (currentFilter === "undone") {
                 // 关键修复：未完成筛选下显示未完成数/总任务数
-                statsText = `今日未完成 ${undoneCount} / ${totalTasks}`;
+                statsText = `未完成 (含历史)${undoneCount} / ${totalTasks}`;
             } else {
-                statsText = `今日未完成 ${undoneCount} / ${totalTasks}`;
+                statsText = `未完成 (含历史)${undoneCount} / ${totalTasks}`;
             }
         }
 
