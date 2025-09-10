@@ -33,7 +33,7 @@ ipcMain.handle("show-clear-dialog", async () => {
     const response = await dialog.showMessageBox(win, {
         type: "warning",
         title: "温馨提示",
-        message: "您确定要删除所有TODO数据吗？此操作不可恢复！！！",
+        message: "您确定要删除所有TODO数据吗？请先备份，此操作不可恢复！！！",
         buttons: ["确定", "取消"],
     });
     return response.response === 0;
@@ -147,7 +147,7 @@ function createWindow() {
     win.loadFile("./html/index.html");
 
     win.setMenuBarVisibility(false);
-    win.setAlwaysOnTop(true);
+    win.setAlwaysOnTop(false);
 
     // ✅ 获取屏幕尺寸
     const {width, height} = screen.getPrimaryDisplay().workAreaSize;
@@ -180,7 +180,7 @@ function createWindow() {
             {
                 label: "置顶",
                 type: "checkbox",
-                checked: true,
+                checked: false,
                 click: (item) => {
                     win.setAlwaysOnTop(item.checked);
                 },
