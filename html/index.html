@@ -948,15 +948,44 @@
 
     // ---- 备注处理 ----
     function updateNoteText(id, text) {
-        let tasks = JSON.parse(localStorage.getItem(formatDate(currentDate)) || "[]");
-        tasks = tasks.map(t => t.id === id ? {...t, note: {...(t.note || {images: []}), text}} : t);
-        saveTasks(tasks);
+        // 找到任务实际存储的日期
+        let taskDate = formatDate(currentDate);
+        let tasks = JSON.parse(localStorage.getItem(taskDate) || "[]");
+        let taskExists = tasks.some(t => t.id === id);
+
+        // 如果在当前日期找不到，需要查找任务实际存储的日期
+        if (!taskExists) {
+            // 遍历所有 localStorage 项查找任务
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // 检查是否为日期格式的键
+                if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) {
+                    let dateTasks = JSON.parse(localStorage.getItem(key) || "[]");
+                    if (dateTasks.some(t => t.id === id)) {
+                        taskDate = key;
+                        tasks = dateTasks;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 更新备注文本
+        tasks = tasks.map(t => {
+            if (t.id === id) {
+                return {...t, note: {...(t.note || {images: []}), text}};
+            }
+            return t;
+        });
+
+        localStorage.setItem(taskDate, JSON.stringify(tasks));
     }
 
     function addNoteImage(id, imgData) {
         let taskDate = formatDate(currentDate);
         let tasks = JSON.parse(localStorage.getItem(taskDate) || "[]");
         let taskExists = tasks.some(t => t.id === id);
+
         // 如果在当前日期找不到，需要查找任务实际存储的日期
         if (!taskExists) {
             // 遍历所有 localStorage 项查找任务
@@ -989,6 +1018,7 @@
         let taskDate = formatDate(currentDate);
         let tasks = JSON.parse(localStorage.getItem(taskDate) || "[]");
         let taskExists = tasks.some(t => t.id === id);
+
         // 如果在当前日期找不到，需要查找任务实际存储的日期
         if (!taskExists) {
             // 遍历所有 localStorage 项查找任务
@@ -1016,7 +1046,6 @@
         });
         // 保存到正确的日期位置
         localStorage.setItem(taskDate, JSON.stringify(tasks));
-
         // 重新加载当前视图的任务
         loadTasks(formatDate(currentDate));
     }
