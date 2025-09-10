@@ -547,7 +547,7 @@
             // === 优先级 ===
             const prioSelect = document.createElement("select");
             prioSelect.className = "ml-2 text-xs rounded px-1 py-0.5 dark:bg-gray-700 dark:text-gray-100";
-            ["low", "medium", "high"].forEach(p => {
+            ["high", "medium", "low"].forEach(p => {
                 const opt = document.createElement("option");
                 opt.value = p;
                 opt.textContent = p === "high" ? "🔥 高" : p === "medium" ? "⚡ 中" : "🌱 低";
