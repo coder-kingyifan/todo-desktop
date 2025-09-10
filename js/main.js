@@ -101,7 +101,7 @@ function openAboutWindow() {
     let aboutWin = new BrowserWindow({
         width: 500,
         height: 600,
-        resizable: false,
+        resizable: false, // 不允许调整窗口大小
         alwaysOnTop: true,
         autoHideMenuBar: true,
         title: "关于 憨憨每日Todo",
@@ -132,7 +132,7 @@ function createWindow() {
         width: 450,
         height: 700,
         icon: iconPath,
-        resizable: false,
+        resizable: true,  // 允许调整窗口大小
         maximizable: false,
         minimizable: true,
         fullscreenable: false,
