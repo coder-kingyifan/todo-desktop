@@ -303,6 +303,10 @@
             try {
                 const data = JSON.parse(e.target.result);
                 for (let key in data) {
+                    // 跳过主题和默认优先级配置的导入
+                    if (key === "theme" || key === "defaultPriority") {
+                        continue;
+                    }
                     localStorage.setItem(key, JSON.stringify(data[key]));
                 }
                 showToast("✅ 数据已导入，正在刷新");
@@ -1049,7 +1053,19 @@
     function clearAllData() {
         window.electronAPI.showClearDialog().then((confirmed) => {
             if (confirmed) {
+                // 只删除待办事项数据，保留主题和默认优先级配置
+                const theme = localStorage.getItem("theme");
+                const defaultPriority = localStorage.getItem("defaultPriority");
+
                 localStorage.clear();
+
+                if (theme) {
+                    localStorage.setItem("theme", theme);
+                }
+                if (defaultPriority) {
+                    localStorage.setItem("defaultPriority", defaultPriority);
+                }
+
                 location.reload();
             }
         });
