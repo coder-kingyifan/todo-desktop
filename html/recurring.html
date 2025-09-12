@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>周期TODO设置</title>
+    <!-- 引入 flatpickr CSS -->
+    <link rel="stylesheet" href="../css/flatpickr.min.css">
+    <script src="../css/tailwind.css"></script>
+    <script>
+        tailwind.config = {darkMode: 'class'}
+    </script>
+    <style>
+        /* 预览项样式 */
+        .preview-item {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-item:hover {
+            background-color: #f9fafb;
+            transform: translateY(-0.25rem);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-item .task-text {
+            font-size: 1rem;
+            color: #1f2937;
+            font-weight: 500;
+        }
+
+        .preview-item .date-text {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .dark .preview-item {
+            background-color: #1a1a1a;
+            border-color: #2d2d2d;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .dark .preview-item:hover {
+            background-color: #262626;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .dark .preview-item .task-text {
+            color: #e5e5e5;
+        }
+
+        .dark .preview-item .date-text {
+            color: #b3b3b3;
+        }
+
+        /* flatpickr输入框样式 */
+        .flatpickr-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid #d1d5db;
+            background-color: white;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            color: #374151;
+        }
+
+        .flatpickr-input:focus {
+            outline: none;
+            border-color: #34d399;
+            box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.3);
+        }
+
+        .dark .flatpickr-input {
+            background-color: #1f2937;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+
+        .dark .flatpickr-input:focus {
+            border-color: #34d399;
+            box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.3);
+        }
+
+        /* 隐藏单个日期输入框 */
+        #startDate, #endDate {
+            display: none;
+        }
+
+        /* 日期范围显示样式 */
+        .date-range-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .dark .date-range-display {
+            color: #9ca3af;
+        }
+
+        /* 预览列表滚动样式 */
+        #previewList {
+            max-height: 240px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 4px;
+        }
+
+        /* 自定义滚动条样式（WebKit浏览器） */
+        #previewList::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #previewList::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #previewList::-webkit-scrollbar-thumb {
+            background: #c5c5c5;
+            border-radius: 4px;
+        }
+
+        #previewList::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
+        }
+
+        /* 暗色主题下的滚动条样式 */
+        .dark #previewList::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .dark #previewList::-webkit-scrollbar-thumb {
+            background: #555;
+        }
+
+        .dark #previewList::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 transition-colors
+  bg-gradient-to-br from-green-100 via-emerald-100 to-teal-100
+  dark:from-gray-900 dark:via-black dark:to-gray-900">
+
+<div id="recurringPage" class="w-full max-w-2xl bg-white/90 dark:bg-black/70 backdrop-blur-md
+      rounded-2xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
+    <div class="flex justify-between items-center mb-6">
+        <button onclick="closeRecurring()"
+                class="px-4 py-2 rounded-xl font-semibold text-gray-700 dark:text-gray-200
+                       bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+            ←
+        </button>
+        <h2 class="text-center text-2xl font-extrabold
+            bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500
+            bg-clip-text text-transparent drop-shadow-lg tracking-wide">
+            周期TODO设置
+        </h2>
+        <div></div>
+    </div>
+
+    <div class="mb-6">
+        <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">TODO内容</label>
+        <input type="text" id="recurringTaskText" placeholder="请输入TODO内容"
+               class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600
+                      bg-white dark:bg-gray-800 dark:text-gray-100 shadow-sm
+                      focus:outline-none focus:ring-2 focus:ring-green-400">
+    </div>
+
+    <div class="mb-6">
+        <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">优先级</label>
+        <select id="recurringPriority"
+                class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600
+                       dark:bg-gray-800 dark:text-gray-100 shadow-sm">
+            <option value="high">🔥 高</option>
+            <option value="medium">⚡ 中</option>
+            <option value="low">🌱 低</option>
+        </select>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="mb-6">
+            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">日期范围</label>
+            <div class="relative">
+                <input type="text" id="dateRange" placeholder="选择开始和结束日期"
+                       class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600
+                      bg-white dark:bg-gray-800 dark:text-gray-100 shadow-sm
+                      focus:outline-none focus:ring-2 focus:ring-green-400"
+                       readonly>
+                <div class="date-range-display">
+                    <span id="startDateDisplay">开始日期: 未选择</span>
+                    <span id="endDateDisplay">结束日期: 未选择</span>
+                </div>
+            </div>
+            <!-- 隐藏的输入框用于存储日期值 -->
+            <input type="text" id="startDate" class="hidden">
+            <input type="text" id="endDate" class="hidden">
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                最长可选择一年时间范围
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-6">
+        <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">周期类型</label>
+        <div class="flex flex-wrap gap-2 mb-2">
+            <button onclick="setRecurringType('daily')" id="type-daily"
+                    class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200">
+                每天
+            </button>
+            <button onclick="setRecurringType('workday')" id="type-workday"
+                    class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200">
+                工作日
+            </button>
+
+            <button onclick="setRecurringType('weekend')" id="type-weekend"
+                    class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200">
+                周末
+            </button>
+
+            <button onclick="setRecurringType('weekly')" id="type-weekly"
+                    class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200">
+                每周
+            </button>
+        </div>
+        <div class="mt-2">
+            <div id="weeklyOptions" class="mt-3 grid grid-cols-7 gap-2 hidden">
+                <button onclick="toggleWeekday(1)" id="weekday-1"
+                        class="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    一
+                </button>
+                <button onclick="toggleWeekday(2)" id="weekday-2"
+                        class="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    二
+                </button>
+                <button onclick="toggleWeekday(3)" id="weekday-3"
+                        class="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    三
+                </button>
+                <button onclick="toggleWeekday(4)" id="weekday-4"
+                        class="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    四
+                </button>
+                <button onclick="toggleWeekday(5)" id="weekday-5"
+                        class="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    五
+                </button>
+                <button onclick="toggleWeekday(6)" id="weekday-6"
+                        class="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    六
+                </button>
+                <button onclick="toggleWeekday(0)" id="weekday-0"
+                        class="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    日
+                </button>
+            </div>
+        </div>
+        <input type="hidden" id="recurringType" value="daily">
+        <input type="hidden" id="selectedWeekdays" value="">
+    </div>
+
+    <div class="flex flex-col items-center mb-6">
+        <button onclick="saveRecurringTasks()"
+                class="px-8 py-3 rounded-xl font-semibold text-white
+                       bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md transition transform hover:scale-105">
+            保存周期TODO
+        </button>
+    </div>
+
+    <div id="previewSection" class="mt-6 hidden">
+        <h3 class="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200">周期TODO预览</h3>
+        <div id="previewList" class="max-h-60 overflow-y-auto space-y-2 pr-2"></div>
+    </div>
+</div>
+
+<!-- 中间提示框 -->
+<div id="toast"
+     class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+         bg-black/80 text-white px-6 py-3 rounded-2xl shadow-lg hidden z-50
+         text-lg font-semibold opacity-0 transition-opacity duration-300">
+</div>
+
+<!-- 引入 flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+<script>
+    // 初始化日期范围选择器
+    function initDateRangePicker() {
+        const today = new Date();
+        const maxDate = new Date();
+        maxDate.setFullYear(today.getFullYear() + 1);
+
+        // 初始化日期范围选择器
+        flatpickr("#dateRange", {
+            locale: "zh",
+            mode: "range",
+            defaultDate: [today, new Date(today.getFullYear(), today.getMonth() + 1, today.getDate())],
+            minDate: today,
+            maxDate: maxDate,
+            dateFormat: "Y-m-d",
+            onChange: function (selectedDates, dateStr, instance) {
+                // 将选择的日期分别设置到隐藏的输入框中
+                if (selectedDates.length >= 1) {
+                    document.getElementById('startDate').value = formatDate(selectedDates[0]);
+                    document.getElementById('startDateDisplay').textContent = `开始日期: ${formatDateDisplaySimple(selectedDates[0])}`;
+                }
+                if (selectedDates.length >= 2) {
+                    document.getElementById('endDate').value = formatDate(selectedDates[1]);
+                    document.getElementById('endDateDisplay').textContent = `结束日期: ${formatDateDisplaySimple(selectedDates[1])}`;
+                } else if (selectedDates.length === 1) {
+                    // 如果只选择了一个日期，则开始和结束日期相同
+                    document.getElementById('endDate').value = formatDate(selectedDates[0]);
+                    document.getElementById('endDateDisplay').textContent = `结束日期: ${formatDateDisplaySimple(selectedDates[0])}`;
+                }
+
+                updatePreview();
+            }
+        });
+
+        // 设置默认值
+        document.getElementById('startDate').value = formatDate(today);
+        const defaultEndDate = new Date();
+        defaultEndDate.setDate(today.getDate() + 30);
+        document.getElementById('endDate').value = formatDate(defaultEndDate);
+
+        // 显示默认日期
+        document.getElementById('startDateDisplay').textContent = `开始日期: ${formatDateDisplaySimple(today)}`;
+        document.getElementById('endDateDisplay').textContent = `结束日期: ${formatDateDisplaySimple(defaultEndDate)}`;
+    }
+
+    // 设置默认优先级
+    function setDefaultPriority() {
+        const defaultPriority = localStorage.getItem("defaultPriority") || "medium";
+        document.getElementById("recurringPriority").value = defaultPriority;
+    }
+
+    applyTheme();
+    setDefaultPriority();
+    initDateRangePicker();
+
+    let currentType = 'daily';
+    let selectedWeekdays = [];
+
+    function setRecurringType(type) {
+        currentType = type;
+        document.getElementById('recurringType').value = type;
+
+        // 更新按钮样式
+        document.querySelectorAll('[id^=type-]').forEach(btn => {
+            const btnType = btn.id.split('-')[1];
+            if (btnType === type) {
+                btn.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-gray-800', 'dark:text-gray-200');
+                btn.classList.add('bg-green-100', 'dark:bg-green-700', 'text-green-800', 'dark:text-green-200');
+            } else {
+                btn.classList.remove('bg-green-100', 'dark:bg-green-700', 'text-green-800', 'dark:text-green-200');
+                btn.classList.add('bg-gray-100', 'dark:bg-gray-700', 'text-gray-800', 'dark:text-gray-200');
+            }
+        });
+
+        // 处理每周选项显示
+        if (type === 'weekly') {
+            document.getElementById('weeklyOptions').classList.remove('hidden');
+        } else {
+            document.getElementById('weeklyOptions').classList.add('hidden');
+        }
+
+        // 更新预览
+        updatePreview();
+    }
+
+    function toggleWeekday(day) {
+        const index = selectedWeekdays.indexOf(day);
+        const button = document.getElementById(`weekday-${day}`);
+
+        if (index > -1) {
+            selectedWeekdays.splice(index, 1);
+            button.classList.remove('bg-green-100', 'dark:bg-green-700', 'text-green-800', 'dark:text-green-200');
+            button.classList.add('bg-gray-100', 'dark:bg-gray-700', 'text-gray-800', 'dark:text-gray-200');
+        } else {
+            selectedWeekdays.push(day);
+            button.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-gray-800', 'dark:text-gray-200');
+            button.classList.add('bg-green-100', 'dark:bg-green-700', 'text-green-800', 'dark:text-green-200');
+        }
+
+        document.getElementById('selectedWeekdays').value = selectedWeekdays.join(',');
+        updatePreview();
+    }
+
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function formatDateDisplaySimple(date) {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function formatDateDisplay(dateStr) {
+        const date = new Date(dateStr);
+        const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        const now = new Date();
+
+        // 检查是否为当年
+        if (date.getFullYear() === now.getFullYear()) {
+            // 当年显示：月份/日期（周几）
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${month}/${day}（${weekdays[date.getDay()]}）`;
+        } else {
+            // 跨年显示：年-月份-日期（周几）
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}（${weekdays[date.getDay()]}）`;
+        }
+    }
+
+    function generateRecurringDates() {
+        const startDateStr = document.getElementById('startDate').value;
+        const endDateStr = document.getElementById('endDate').value;
+        const type = document.getElementById('recurringType').value;
+        const dates = [];
+
+        if (!startDateStr || !endDateStr) {
+            return dates;
+        }
+
+        // 使用更安全的方式解析日期，避免时区问题
+        function parseDate(dateStr) {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            return new Date(year, month - 1, day); // month是0-indexed
+        }
+
+        const startDate = parseDate(startDateStr);
+        const endDate = parseDate(endDateStr);
+
+        if (startDate > endDate) {
+            return dates;
+        }
+
+        const currentDate = new Date(startDate);
+
+        // 确保结束日期被包含
+        endDate.setDate(endDate.getDate() + 1);
+
+        while (currentDate < endDate) {
+            // 使用同样的安全方式格式化日期
+            const year = currentDate.getFullYear();
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const day = String(currentDate.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+
+            switch (type) {
+                case 'daily':
+                    dates.push(dateStr);
+                    break;
+                case 'workday':
+                    if (currentDate.getDay() >= 1 && currentDate.getDay() <= 5) {
+                        dates.push(dateStr);
+                    }
+                    break;
+                case 'weekend':
+                    if (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+                        dates.push(dateStr);
+                    }
+                    break;
+                case 'weekly':
+                    if (selectedWeekdays.includes(currentDate.getDay())) {
+                        dates.push(dateStr);
+                    }
+                    break;
+            }
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        return dates;
+    }
+
+
+    function updatePreview() {
+        const taskText = document.getElementById('recurringTaskText').value.trim();
+        const dates = generateRecurringDates();
+        const previewSection = document.getElementById('previewSection');
+        const previewList = document.getElementById('previewList');
+
+        if (!taskText || dates.length === 0) {
+            previewSection.classList.add('hidden');
+            return;
+        }
+
+        previewList.innerHTML = '';
+        dates.forEach(date => {
+            const item = document.createElement('div');
+            item.className = 'preview-item';
+            item.innerHTML = `
+            <span class="task-text">${taskText}</span>
+            <span class="date-text">(${formatDateDisplay(date)})</span>
+        `;
+            previewList.appendChild(item);
+        });
+
+        previewSection.classList.remove('hidden');
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById("toast");
+        toast.textContent = msg;
+        toast.classList.remove("hidden");
+        // 动画：淡入
+        setTimeout(() => toast.classList.add("opacity-100"), 10);
+
+        // 2 秒后淡出
+        setTimeout(() => {
+            toast.classList.remove("opacity-100");
+            setTimeout(() => toast.classList.add("hidden"), 300);
+        }, 2000);
+    }
+
+    function saveRecurringTasks() {
+        const taskText = document.getElementById('recurringTaskText').value.trim();
+        const priority = document.getElementById('recurringPriority').value;
+        const type = document.getElementById('recurringType').value;
+        const dates = generateRecurringDates();
+
+        if (!taskText) {
+            showToast('请输入TODO内容');
+            return;
+        }
+
+        if (type === 'weekly' && selectedWeekdays.length === 0) {
+            showToast('请选择至少选一天');
+            return;
+        }
+
+        if (dates.length === 0) {
+            showToast('没有符合条件的日期，请检查开始和结束日期以及周期设置');
+            return;
+        }
+
+        let count = 0;
+        dates.forEach(date => {
+            let tasks = JSON.parse(localStorage.getItem(date) || "[]");
+            tasks.push({
+                id: genId(),
+                text: `${taskText} (${formatDateDisplay(date)})`,
+                done: false,
+                createdAt: new Date().toISOString(),
+                completedAt: null,
+                priority: priority,
+                note: {text: "", images: []}
+            });
+            localStorage.setItem(date, JSON.stringify(tasks));
+            count++;
+        });
+
+        showToast(`成功创建 ${count} 个周期TODO！`);
+        setTimeout(() => {
+            closeRecurring();
+        }, 2000);
+    }
+
+    function genId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    }
+
+    function closeRecurring() {
+        window.location.href = 'index.html';
+    }
+
+    // 应用主题设置
+    function applyTheme() {
+        const theme = localStorage.getItem("theme") || "light";
+        if (theme === "dark") {
+            document.documentElement.classList.add("dark");
+        } else {
+            document.documentElement.classList.remove("dark");
+        }
+    }
+
+    // 监听输入变化以更新预览
+    document.getElementById('recurringTaskText').addEventListener('input', updatePreview);
+    document.getElementById('recurringPriority').addEventListener('change', updatePreview);
+
+    // 初始化预览
+    updatePreview();
+
+    // 初始化第一个按钮（每天）为选中状态
+    document.getElementById('type-daily').classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-gray-800', 'dark:text-gray-200');
+    document.getElementById('type-daily').classList.add('bg-green-100', 'dark:bg-green-700', 'text-green-800', 'dark:text-green-200');
+</script>
+</body>
+</html>

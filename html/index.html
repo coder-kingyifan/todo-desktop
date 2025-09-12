@@ -203,10 +203,18 @@
             导入数据
         </button>
     </div>
+    <div class="mb-6 grid grid-cols-1 gap-3">
+        <!-- 周期任务按钮 -->
+        <button onclick="openRecurringModal()"
+                class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-3 rounded-2xl font-semibold hover:from-purple-600 hover:to-pink-600 shadow-lg transition flex items-center justify-center gap-2">
+            <span>🔄</span>
+            <span>周期任务设置</span>
+        </button>
 
-    <div class="mb-6">
+        <!-- 删除全部数据按钮 -->
         <button onclick="clearAllData()"
-                class="w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">🗑️ 删除全部数据
+                class="w-full bg-red-500 text-white px-4 py-3 rounded-2xl font-semibold hover:bg-red-600 shadow-lg transition">
+            🗑️ 删除全部数据
         </button>
     </div>
 
@@ -1245,6 +1253,10 @@
         todayBtnWrapper.classList.add("hidden");
     });
 
+    //添加周期任务
+    function openRecurringModal() {
+        window.location.href = 'recurring.html';
+    }
 </script>
 <!-- 中间提示框 -->
 <div id="toast"
