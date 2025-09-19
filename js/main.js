@@ -104,7 +104,7 @@ function openAboutWindow() {
         width: 500,
         height: 600,
         resizable: false, // 不允许调整窗口大小
-        alwaysOnTop: true,
+        alwaysOnTop: false,
         autoHideMenuBar: true,
         title: "关于 憨憨每日Todo",
         icon: path.join(__dirname, "../static/icon.png"), // 设置和主程序相同的图标
