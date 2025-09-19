@@ -147,6 +147,75 @@
         .dark #previewList::-webkit-scrollbar-thumb:hover {
             background: #777;
         }
+
+        .priority-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .priority-high {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        .priority-medium {
+            background-color: #fef3c7;
+            color: #f59e0b;
+        }
+
+        .priority-low {
+            background-color: #dcfce7;
+            color: #22c55e;
+        }
+
+        .dark .priority-high {
+            background-color: #7f1d1d;
+            color: #fecaca;
+        }
+
+        .dark .priority-medium {
+            background-color: #78350f;
+            color: #fde68a;
+        }
+
+        .dark .priority-low {
+            background-color: #14532d;
+            color: #bbf7d0;
+        }
+
+
+        .preview-item-content {
+            flex: 1;
+            font-size: 1rem;
+            color: #1f2937;
+            font-weight: 500;
+        }
+
+        .preview-item-priority {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .preview-item-date {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .dark .preview-item-content {
+            color: #e5e5e5;
+        }
+
+        .dark .preview-item-date {
+            color: #b3b3b3;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 transition-colors
@@ -499,6 +568,7 @@
 
     function updatePreview() {
         const taskText = document.getElementById('recurringTaskText').value.trim();
+        const priority = document.getElementById('recurringPriority').value;
         const dates = generateRecurringDates();
         const previewSection = document.getElementById('previewSection');
         const previewList = document.getElementById('previewList');
@@ -512,15 +582,37 @@
         dates.forEach(date => {
             const item = document.createElement('div');
             item.className = 'preview-item';
-            item.innerHTML = `
-            <span class="task-text">${taskText}</span>
-            <span class="date-text">${formatDateDisplay(date)}</span>
-        `;
+
+            // 获取优先级显示文本和样式
+            let priorityText = '';
+            let priorityClass = '';
+            switch (priority) {
+                case 'high':
+                    priorityText = '🔥 高';
+                    priorityClass = 'priority-high';
+                    break;
+                case 'medium':
+                    priorityText = '⚡ 中';
+                    priorityClass = 'priority-medium';
+                    break;
+                case 'low':
+                    priorityText = '🌱 低';
+                    priorityClass = 'priority-low';
+                    break;
+            }
+
+            item.innerHTML = `                <div class="preview-item-content">${taskText}</div>
+                <div class="preview-item-priority">
+                    <span class="priority-indicator ${priorityClass}">${priorityText}</span>
+                </div>
+                <div class="preview-item-date">${formatDateDisplay(date)}</div>
+            `;
             previewList.appendChild(item);
         });
 
         previewSection.classList.remove('hidden');
     }
+
 
     function showToast(msg) {
         const toast = document.getElementById("toast");
