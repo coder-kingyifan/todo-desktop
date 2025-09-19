@@ -424,13 +424,13 @@
             // 当年显示：月份/日期（周几）
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
-            return `${month}/${day}（${weekdays[date.getDay()]}）`;
+            return `${month}/${day}(${weekdays[date.getDay()]})`;
         } else {
             // 跨年显示：年-月份-日期（周几）
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}（${weekdays[date.getDay()]}）`;
+            return `${year}/${month}/${day}(${weekdays[date.getDay()]})`;
         }
     }
 
@@ -514,7 +514,7 @@
             item.className = 'preview-item';
             item.innerHTML = `
             <span class="task-text">${taskText}</span>
-            <span class="date-text">(${formatDateDisplay(date)})</span>
+            <span class="date-text">${formatDateDisplay(date)}</span>
         `;
             previewList.appendChild(item);
         });
