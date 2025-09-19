@@ -99,7 +99,7 @@
         .date-range-display {
             display: flex;
             justify-content: space-between;
-            margin-top: 0.5rem;
+            margin-top: 0.25rem;
             font-size: 0.875rem;
             color: #6b7280;
         }
@@ -188,8 +188,8 @@
         </select>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div class="mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
             <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">日期范围</label>
             <div class="relative">
                 <input type="text" id="dateRange" placeholder="选择开始和结束日期"
@@ -197,21 +197,19 @@
                       bg-white dark:bg-gray-800 dark:text-gray-100 shadow-sm
                       focus:outline-none focus:ring-2 focus:ring-green-400"
                        readonly>
-                <div class="date-range-display">
-                    <span id="startDateDisplay">开始日期: 未选择</span>
-                    <span id="endDateDisplay">结束日期: 未选择</span>
-                </div>
+            </div>
+            <!-- 添加日期显示元素 -->
+            <div class="date-range-display">
+                <span id="startDateDisplay">开始日期: </span>
+                <span id="endDateDisplay">结束日期: </span>
             </div>
             <!-- 隐藏的输入框用于存储日期值 -->
             <input type="text" id="startDate" class="hidden">
             <input type="text" id="endDate" class="hidden">
-            <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                最长可选择一年时间范围
-            </div>
         </div>
     </div>
 
-    <div class="mb-6">
+    <div class="mb-4">
         <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">周期类型</label>
         <div class="flex flex-wrap gap-2 mb-2">
             <button onclick="setRecurringType('daily')" id="type-daily"
@@ -347,7 +345,7 @@
         document.getElementById("recurringPriority").value = defaultPriority;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         applyTheme();
         setDefaultPriority();
         initDateRangePicker();
