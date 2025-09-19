@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "electron": "^28.0.0",
-    "electron-builder": "^24.0.0"
+    "electron-builder": "^24.13.3"
   },
   "dependencies": {
     "auto-launch": "^5.0.6"
