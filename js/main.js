@@ -96,7 +96,9 @@ function loadConfig() {
         }
     }
 }
-
+// 在 createWindow() 函数上方添加版本读取逻辑
+const packageJson = require('../package.json');
+const appVersion = packageJson.version || 'unknown';
 function openAboutWindow() {
     let aboutWin = new BrowserWindow({
         width: 500,
@@ -111,7 +113,9 @@ function openAboutWindow() {
         },
     });
 
-    aboutWin.loadURL("http://coder-kingyifan.github.io/todo-about/");
+    // 将版本信息通过 URL 参数传递
+    const aboutUrl = `https://coder-kingyifan.github.io/todo-about/?version=${appVersion}`;
+    aboutWin.loadURL(aboutUrl);
 
     aboutWin.on("closed", () => {
         aboutWin = null;
