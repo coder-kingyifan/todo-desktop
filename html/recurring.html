@@ -291,8 +291,8 @@
 </div>
 
 <!-- 引入 flatpickr JS -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+<script src="../js/flatpickr"></script>
+<script src="../js/zh.js"></script>
 <script>
     // 初始化日期范围选择器
     function initDateRangePicker() {
@@ -333,9 +333,12 @@
         defaultEndDate.setDate(today.getDate() + 30);
         document.getElementById('endDate').value = formatDate(defaultEndDate);
 
-        // 显示默认日期
+        // 显示默认日期 - 这里是关键修改
         document.getElementById('startDateDisplay').textContent = `开始日期: ${formatDateDisplaySimple(today)}`;
         document.getElementById('endDateDisplay').textContent = `结束日期: ${formatDateDisplaySimple(defaultEndDate)}`;
+
+        // 同时更新flatpickr的输入框显示
+        document.getElementById('dateRange').value = `${formatDate(today)} 至 ${formatDate(defaultEndDate)}`;
     }
 
     // 设置默认优先级
@@ -344,9 +347,11 @@
         document.getElementById("recurringPriority").value = defaultPriority;
     }
 
-    applyTheme();
-    setDefaultPriority();
-    initDateRangePicker();
+    document.addEventListener('DOMContentLoaded', function() {
+        applyTheme();
+        setDefaultPriority();
+        initDateRangePicker();
+    });
 
     let currentType = 'daily';
     let selectedWeekdays = [];
