@@ -154,7 +154,16 @@
 
 <!-- 设置页面 -->
 <div id="settingsPage" class="hidden w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
-    <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">⚙️ 设置</h2>
+
+    <div class="flex justify-between items-center mb-6">
+        <button onclick="closeSettings()"
+                class="px-4 py-2 rounded-xl font-semibold text-gray-700 dark:text-gray-200
+                   bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+            ←
+        </button>
+        <h2 class="text-center text-xl font-bold text-gray-800 dark:text-gray-200">⚙️ 设置</h2>
+        <div></div>
+    </div>
 
     <div class="mb-4">
         <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">默认优先级</label>
@@ -218,13 +227,6 @@
         </button>
     </div>
 
-
-    <div class="flex justify-end">
-        <button onclick="closeSettings()"
-                class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700">
-            返回待办
-        </button>
-    </div>
 </div>
 
 <!-- 图片预览 -->
@@ -1130,6 +1132,12 @@
         settingsPage.classList.add("hidden");
         loadTasks(formatDate(currentDate));
     }
+
+    defaultPriorityEl.addEventListener("change", () => {
+        localStorage.setItem("defaultPriority", defaultPriorityEl.value);
+        // 同步优先级到主页面
+        priorityEl.value = defaultPriorityEl.value;
+    });
 
     function clearAllData() {
         window.electronAPI.showClearDialog().then((confirmed) => {

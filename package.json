@@ -2,7 +2,7 @@
   "name": "hanhan-todo",
   "version": "1.0.1",
   "description": "憨憨每日Todo",
-  "author": "kingyifan@88.com",
+  "author": "kingyifan",
   "main": "./js/main.js",
   "build": {
     "appId": "com.kingyifan.todo",
